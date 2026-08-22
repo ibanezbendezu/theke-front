@@ -33,11 +33,11 @@ export function Library() {
 
     return (
         <div className="max-w-[900px] mx-auto px-12 py-16 pb-32">
-            <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Biblioteca de recursos' }]} />
-
             <header className="mb-8">
                 <h1 className="text-[40px] font-bold text-on-background leading-tight mb-2">Biblioteca</h1>
             </header>
+
+            <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Biblioteca de recursos' }]} />
 
             {/* Notion Database Toolbar */}
             <div className="flex items-center justify-between border-b border-border pb-1 mb-4">

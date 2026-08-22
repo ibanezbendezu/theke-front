@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, FileText, Globe, Settings, ChevronsLeft, Plus } from 'lucide-react';
+import { LayoutGrid, FileText, Globe, Folder, ChevronsLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
@@ -56,9 +56,8 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
 
             {/* Acciones Rápidas */}
             <div className="px-2 mb-4 mt-2 space-y-0.5">
-                <div className="px-1 mb-2"><Input placeholder="Buscar..." /></div>
-                <Button className="w-full justify-start" icon={Settings}>Configuración</Button>
-                <Button className="w-full justify-start" icon={Plus}>Nueva página</Button>
+                <div className="px-1"><Input placeholder="Buscar..." /></div>
+                <NavItem to="/explore" icon={Globe} label="Explorar" />
             </div>
 
             {/* Navegación usando el componente NavItem */}
@@ -66,7 +65,7 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
                 <div className="pt-2 pb-1 px-3 text-[11px] font-semibold text-outline tracking-wider">MI UNIDAD</div>
                 <NavItem to="/" icon={LayoutGrid} label="Inicio" />
                 <NavItem to="/library" icon={FileText} label="Biblioteca" />
-                <NavItem to="/explore" icon={Globe} label="Explorar" />
+                <NavItem to="/projects" icon={Folder} label="Proyectos" />
             </nav>
         </aside>
     );
