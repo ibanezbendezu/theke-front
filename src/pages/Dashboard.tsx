@@ -12,7 +12,9 @@ export function Dashboard() {
     const navigate = useNavigate();
 
     return (
-        <div className="max-w-[900px] mx-auto px-12 py-16 pb-32">
+        // Quitamos mx-auto y max-w, dejamos w-full para alineación izquierda
+        <div className="w-full px-10 md:px-16 py-12 pb-32">
+
             <header className="mb-10">
                 <h1 className="text-[40px] font-bold text-on-background leading-tight mb-2">Inicio</h1>
                 <div className="flex items-center gap-2 mt-4">
@@ -27,7 +29,7 @@ export function Dashboard() {
                         <Clock size={16} /> Vistos recientemente
                     </h2>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         {mockCanvases.map((canvas) => (
                             <Card
                                 key={canvas.id}

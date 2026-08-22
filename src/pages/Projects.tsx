@@ -1,46 +1,28 @@
 import { useState } from 'react';
-import { Folder, FileText, Image as ImageIcon, Link as LinkIcon, Film, Plus, MoreHorizontal, ArrowUpDown } from 'lucide-react';
+import { Folder, Plus, MoreHorizontal, ArrowUpDown } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Breadcrumb } from '../components/ui/Breadcrumb';
 
-// Mock de datos
-const mockFolders = [
-    { id: '1', name: 'Recursos Proyecto A', count: 12 },
-    { id: '2', name: 'Referencias Diseño', count: 5 },
+const mockProjects = [
+    { id: '1', name: 'Rediseño App Móvil', status: 'En progreso', lastEdited: 'Hace 2 h' },
+    { id: '2', name: 'Arquitectura Backend', status: 'Planificación', lastEdited: 'Ayer' },
+    { id: '3', name: 'Campaña Q3', status: 'Completado', lastEdited: '12 May' },
 ];
 
-const mockFiles = [
-    { id: '1', name: 'Requerimientos.pdf', type: 'pdf', date: 'Hace 2 h', size: '2.4 MB' },
-    { id: '2', name: 'Video Entrevista', type: 'video', date: 'Ayer', size: '150 MB' },
-    { id: '3', name: 'Inspiración UI', type: 'link', date: '12 May', size: '--' },
-];
-
-export function Library() {
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-
-    const getIcon = (type: string, size = 24) => {
-        switch (type) {
-            case 'pdf': return <FileText size={size} className="text-[#E03E3E]" />;
-            case 'video': return <Film size={size} className="text-[#D9730D]" />;
-            case 'link': return <LinkIcon size={size} className="text-[#2383E2]" />;
-            case 'image': return <ImageIcon size={size} className="text-[#0F7B6C]" />;
-            default: return <Folder size={size} className="text-outline" />;
-        }
-    };
+export function Projects() {
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // Default en grid para variar
 
     return (
         <div className="w-full px-10 md:px-16 py-12 pb-32">
 
-            {/* Breadcrumb justo arriba del H1 (Estilo Notion clásico) */}
-            <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Biblioteca de recursos' }]} />
+            <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Proyectos' }]} />
 
             <header className="mb-8 mt-2">
-                <h1 className="text-[40px] font-bold text-on-background leading-tight mb-2">Biblioteca</h1>
+                <h1 className="text-[40px] font-bold text-on-background leading-tight mb-2">Proyectos</h1>
             </header>
 
-            {/* Notion Database Toolbar */}
             <div className="flex items-center justify-between border-b border-border pb-1 mb-4">
                 <div className="flex items-center gap-1">
                     <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} onClick={() => setViewMode('list')}>Tabla</Button>
@@ -48,7 +30,6 @@ export function Library() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* Botón Ordenar a la izquierda del Nuevo */}
                     <Button variant="ghost" className="text-outline hover:text-on-background" icon={ArrowUpDown}>Ordenar</Button>
                     <Button variant="ghost" className="text-[#2383E2]" icon={Plus}>Nuevo</Button>
                 </div>
@@ -57,28 +38,33 @@ export function Library() {
             {/* Vistas */}
             {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {mockFolders.map(folder => (
-                        <Card key={folder.id} title={folder.name} subtitle={`${folder.count} elementos`} icon={getIcon('folder', 32)} />
-                    ))}
-                    {mockFiles.map(file => (
-                        <Card key={file.id} title={file.name} subtitle={file.date} icon={getIcon(file.type, 32)} />
+                    {mockProjects.map(proj => (
+                        <Card
+                            key={proj.id}
+                            title={proj.name}
+                            subtitle={proj.lastEdited}
+                            icon={<Folder size={32} className="text-outline" />}
+                        />
                     ))}
                 </div>
             ) : (
                 <div className="flex flex-col text-[14px]">
                     <div className="flex items-center text-outline border-b border-border py-2 px-2 hover:bg-surface/30">
                         <div className="flex-1 font-medium">Nombre</div>
-                        <div className="w-32 hidden md:block font-medium">Tipo</div>
+                        <div className="w-32 hidden md:block font-medium">Estado</div>
                         <div className="w-32 hidden sm:block font-medium">Última edición</div>
                     </div>
-                    {[...mockFolders.map(f => ({...f, type: 'folder', date: '--'})), ...mockFiles].map(item => (
+                    {mockProjects.map(item => (
                         <div key={item.id} className="group flex items-center py-1.5 px-2 hover:bg-surface-variant border-b border-border/30 cursor-pointer transition-colors text-on-background">
                             <div className="flex-1 flex items-center gap-2 font-medium">
-                                {getIcon(item.type, 18)}
+                                <Folder size={18} className="text-outline" />
                                 <span>{item.name}</span>
                             </div>
-                            <div className="w-32 hidden md:block"><Badge>{item.type}</Badge></div>
-                            <div className="w-32 text-outline hidden sm:block text-[13px]">{item.date}</div>
+                            <div className="w-32 hidden md:block">
+                                {/* Puedes agregar colores dinámicos al badge según el estado si lo deseas */}
+                                <Badge>{item.status}</Badge>
+                            </div>
+                            <div className="w-32 text-outline hidden sm:block text-[13px]">{item.lastEdited}</div>
                             <div className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-border/50 rounded-[3px]">
                                 <MoreHorizontal size={16} className="text-outline" />
                             </div>

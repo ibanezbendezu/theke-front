@@ -5,6 +5,7 @@ import { CanvasEditor } from '../features/canvas/CanvasEditor';
 import { Placeholder } from '../components/ui/Placeholder';
 import { Dashboard } from '../pages/Dashboard';
 import { Library } from '../pages/Library';
+import { Projects } from '../pages/Projects';
 
 export const router = createBrowserRouter([
     {
@@ -18,6 +19,10 @@ export const router = createBrowserRouter([
             {
                 path: 'library',
                 element: <Library/>,
+            },
+            {
+                path: 'projects',
+                element: <Projects/>,
             },
             {
                 path: 'explore',
