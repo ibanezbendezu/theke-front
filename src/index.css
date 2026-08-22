@@ -1,86 +1,58 @@
 @import "tailwindcss";
-@import "@xyflow/react/dist/style.css"; /* <--- Añade esto */
+@import "@xyflow/react/dist/style.css";
 
-/* 1. Definimos las variables de color basadas en tu paleta */
 @layer base {
   :root {
-    /* Fondos y textos base */
+    /* Exact Notion Palette - Light Mode */
     --background: #FFFFFF;
-    --on-background: #1F1F1F;
-    --surface: #F1F1F1;
-    --surface-variant: #F0F4F9;
-    --border: #E3E3E3;
+    --on-background: #37352F;
+    --surface: #F7F7F5; /* Sidebar clásico de Notion */
+    --surface-variant: rgba(55, 53, 47, 0.08); /* Hover clásico */
+    --border: rgba(55, 53, 47, 0.16); /* Bordes sutiles */
+    --outline: rgba(55, 53, 47, 0.45); /* Textos secundarios */
 
     /* Acentos */
-    --primary: #1E8E3E;
+    --primary: #2383E2; /* Azul Notion para botones primarios */
     --on-primary: #FFFFFF;
-    --secondary: #1A73E8;
-
-    /* Colores para Nodos/Tarjetas (Adaptados de prayerNote) */
-    --note-red: #FFDAD6;
-    --note-yellow: #FFE08F;
-    --note-green: #C4EED0;
-    --note-blue: #CBF0F8;
-    --note-purple: #EADDFF;
-    --note-gray: #E3E3E3;
+    --secondary: #E9E9E7;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      /* Fondos y textos base oscuros */
-      --background: #131314;
-      --on-background: #E3E3E3;
-      --surface: #1E1F20;
-      --surface-variant: #282A2C;
-      --border: #444746;
-
-      /* Acentos oscuros */
-      --primary: #1E8E3E;
-      --on-primary: #003915;
-      --secondary: #7CAAF7;
-
-      /* Colores para Nodos/Tarjetas (Versiones oscuras) */
-      --note-red: #93000A;
-      --note-yellow: #4D4000;
-      --note-green: #003915;
-      --note-blue: #004E59;
-      --note-purple: #4F378B;
-      --note-gray: #444746;
+      /* Exact Notion Palette - Dark Mode */
+      --background: #191919;
+      --on-background: #FFFFFF;
+      --surface: #202020;
+      --surface-variant: rgba(255, 255, 255, 0.055);
+      --border: rgba(255, 255, 255, 0.13);
+      --outline: rgba(255, 255, 255, 0.44);
+      --primary: #2383E2;
+      --on-primary: #FFFFFF;
     }
   }
 }
 
-/* 2. Le decimos a Tailwind v4 que use estas variables en su sistema */
 @theme {
   --color-background: var(--background);
   --color-on-background: var(--on-background);
   --color-surface: var(--surface);
   --color-surface-variant: var(--surface-variant);
   --color-border: var(--border);
-
+  --color-outline: var(--outline);
   --color-primary: var(--primary);
   --color-on-primary: var(--on-primary);
-  --color-secondary: var(--secondary);
 
-  --color-note-red: var(--note-red);
-  --color-note-yellow: var(--note-yellow);
-  --color-note-green: var(--note-green);
-  --color-note-blue: var(--note-blue);
-  --color-note-purple: var(--note-purple);
-  --color-note-gray: var(--note-gray);
-
-  /* Tipografía estilo Notion (System fonts) */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  /* Tipografía oficial de Notion */
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
-/* 3. Reseteo del Canvas para que ocupe todo el espacio */
 @layer base {
   html, body, #root {
     width: 100vw;
     height: 100vh;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* El canvas maneja su propio scroll */
+    overflow: hidden;
     background-color: var(--background);
     color: var(--on-background);
     font-family: var(--font-sans);

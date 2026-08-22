@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Folder, FileText, Image as ImageIcon, Link as LinkIcon, Film, Plus, Grid, List, Filter, Upload } from 'lucide-react';
+import { Folder, FileText, Image as ImageIcon, Link as LinkIcon, Film, Plus, MoreHorizontal } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { cn } from '../lib/utils';
+import { Card } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import { Breadcrumb } from '../components/ui/Breadcrumb';
 
 // Mock de datos para la interfaz
 const mockFolders = [
@@ -18,92 +19,84 @@ const mockFiles = [
 ];
 
 export function Library() {
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
-    const getFileIcon = (type: string) => {
+    const getIcon = (type: string, size = 24) => {
         switch (type) {
-            case 'pdf': return <FileText className="text-note-red" />;
-            case 'video': return <Film className="text-note-purple" />;
-            case 'link': return <LinkIcon className="text-note-blue" />;
-            case 'image': return <ImageIcon className="text-note-green" />;
-            default: return <FileText className="text-outline" />;
+            case 'pdf': return <FileText size={size} className="text-[#E03E3E]" />;
+            case 'video': return <Film size={size} className="text-[#D9730D]" />;
+            case 'link': return <LinkIcon size={size} className="text-[#2383E2]" />;
+            case 'image': return <ImageIcon size={size} className="text-[#0F7B6C]" />;
+            default: return <Folder size={size} className="text-outline" />;
         }
     };
 
     return (
-        <div className="flex flex-col h-full bg-background p-8 max-w-7xl mx-auto">
+        <div className="max-w-[900px] mx-auto px-12 py-16 pb-32">
+            <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Biblioteca de recursos' }]} />
 
-            {/* Header Estilo Notion */}
-            <header className="flex items-center justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-semibold text-on-background mb-1">Mi Biblioteca</h1>
-                    <p className="text-sm text-on-surface-variant">Sube y organiza tus recursos para usarlos en el Canvas.</p>
-                </div>
-                <div className="flex gap-3">
-                    <Button variant="outline" icon={Plus}>Nueva Carpeta</Button>
-                    <Button variant="primary" icon={Upload}>Subir Archivo</Button>
-                </div>
+            <header className="mb-8">
+                <h1 className="text-[40px] font-bold text-on-background leading-tight mb-2">Biblioteca</h1>
             </header>
 
-            {/* Controles de Búsqueda y Vista */}
-            <div className="flex items-center gap-4 mb-8">
-                <div className="flex-1 max-w-md">
-                    <Input placeholder="Buscar archivos, links o carpetas..." />
+            {/* Notion Database Toolbar */}
+            <div className="flex items-center justify-between border-b border-border pb-1 mb-4">
+                <div className="flex items-center gap-1">
+                    <Button
+                        variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                        onClick={() => setViewMode('list')}
+                    >
+                        Tabla
+                    </Button>
+                    <Button
+                        variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                        onClick={() => setViewMode('grid')}
+                    >
+                        Galería
+                    </Button>
                 </div>
-                <Button variant="ghost" icon={Filter} size="sm">Filtrar</Button>
-                <div className="flex border border-border rounded-md bg-background overflow-hidden p-0.5">
-                    <button onClick={() => setViewMode('grid')} className={cn("p-1.5 rounded-sm transition-colors cursor-pointer", viewMode === 'grid' ? "bg-surface-variant text-on-background" : "text-outline hover:text-on-surface-variant")}>
-                        <Grid size={16} />
-                    </button>
-                    <button onClick={() => setViewMode('list')} className={cn("p-1.5 rounded-sm transition-colors cursor-pointer", viewMode === 'list' ? "bg-surface-variant text-on-background" : "text-outline hover:text-on-surface-variant")}>
-                        <List size={16} />
-                    </button>
-                </div>
+
+                <Button variant="ghost" className="text-[#2383E2]" icon={Plus}>Nuevo</Button>
             </div>
 
-            {/* Contenido (Canva UX: Hover effects) */}
-            <div className="flex-1 overflow-y-auto pb-12">
-
-                {/* Sección de Carpetas */}
-                <h2 className="text-sm font-semibold text-outline mb-4">CARPETAS</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* Vistas */}
+            {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {/* Carpetas */}
                     {mockFolders.map(folder => (
-                        <div key={folder.id} className="group flex items-center gap-3 p-4 rounded-xl border border-border bg-surface/30 hover:bg-surface hover:border-outline/30 hover:shadow-sm transition-all cursor-pointer">
-                            <div className="w-10 h-10 rounded-lg bg-surface-variant flex items-center justify-center">
-                                <Folder size={20} className="text-on-surface-variant" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-medium text-on-background group-hover:text-primary transition-colors">{folder.name}</h3>
-                                <p className="text-xs text-on-surface-variant">{folder.count} elementos</p>
-                            </div>
-                        </div>
+                        <Card key={folder.id} title={folder.name} subtitle={`${folder.count} elementos`} icon={getIcon('folder', 32)} />
                     ))}
-                </div>
-
-                {/* Sección de Archivos (Grid o Lista) */}
-                <h2 className="text-sm font-semibold text-outline mb-4">RECIENTES</h2>
-                <div className={cn(
-                    viewMode === 'grid'
-                        ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-                        : "flex flex-col gap-2"
-                )}>
+                    {/* Archivos */}
                     {mockFiles.map(file => (
-                        <div key={file.id} className={cn(
-                            "group relative flex border border-border bg-background hover:border-outline/50 hover:shadow-md transition-all cursor-pointer",
-                            viewMode === 'grid' ? "flex-col p-4 rounded-xl items-center text-center hover:-translate-y-1" : "flex-row items-center gap-4 p-3 rounded-lg"
-                        )}>
-                            <div className={cn("flex items-center justify-center rounded-lg bg-surface/50", viewMode === 'grid' ? "w-16 h-16 mb-3" : "w-10 h-10")}>
-                                {getFileIcon(file.type)}
+                        <Card key={file.id} title={file.name} subtitle={file.date} icon={getIcon(file.type, 32)} />
+                    ))}
+                </div>
+            ) : (
+                <div className="flex flex-col text-[14px]">
+                    {/* Header de Tabla */}
+                    <div className="flex items-center text-outline border-b border-border py-2 px-2 hover:bg-surface/30">
+                        <div className="flex-1 font-medium">Nombre</div>
+                        <div className="w-32 hidden md:block font-medium">Tipo</div>
+                        <div className="w-32 hidden sm:block font-medium">Última edición</div>
+                    </div>
+                    {/* Filas */}
+                    {[...mockFolders.map(f => ({...f, type: 'folder', date: '--'})), ...mockFiles].map(item => (
+                        <div key={item.id} className="group flex items-center py-1.5 px-2 hover:bg-surface-variant border-b border-border/30 cursor-pointer transition-colors text-on-background">
+                            <div className="flex-1 flex items-center gap-2 font-medium">
+                                {getIcon(item.type, 18)}
+                                <span>{item.name}</span>
                             </div>
-                            <div className={cn("flex flex-col", viewMode === 'grid' ? "items-center" : "items-start flex-1")}>
-                                <h3 className="text-sm font-medium text-on-background truncate w-full">{file.name}</h3>
-                                <p className="text-xs text-on-surface-variant">{file.date} • {file.size}</p>
+                            <div className="w-32 hidden md:block">
+                                <Badge>{item.type}</Badge>
+                            </div>
+                            <div className="w-32 text-outline hidden sm:block text-[13px]">{item.date}</div>
+                            <div className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-border/50 rounded-[3px]">
+                                <MoreHorizontal size={16} className="text-outline" />
                             </div>
                         </div>
                     ))}
                 </div>
-
-            </div>
+            )}
         </div>
     );
 }

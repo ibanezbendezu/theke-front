@@ -3,6 +3,7 @@ import { AppLayout } from '../layouts/AppLayout';
 import { CanvasLayout } from '../layouts/CanvasLayout';
 import { CanvasEditor } from '../features/canvas/CanvasEditor';
 import { Placeholder } from '../components/ui/Placeholder';
+import { Dashboard } from '../pages/Dashboard';
 import { Library } from '../pages/Library';
 
 export const router = createBrowserRouter([
@@ -12,7 +13,7 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <Placeholder title="Dashboard" />,
+                element: <Dashboard/>,
             },
             {
                 path: 'library',
