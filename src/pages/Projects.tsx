@@ -16,7 +16,6 @@ export function Projects() {
 
     return (
         <div className="w-full px-10 md:px-16 py-12 pb-32">
-
             <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Proyectos' }]} />
 
             <div className="flex items-center justify-between border-b border-border pb-1 mb-4">

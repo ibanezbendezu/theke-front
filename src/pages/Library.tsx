@@ -32,8 +32,6 @@ export function Library() {
 
     return (
         <div className="w-full px-10 md:px-16 py-12 pb-32">
-
-            {/* Breadcrumb justo arriba del H1 (Estilo Notion clásico) */}
             <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Biblioteca de recursos' }]} />
 
             {/* Notion Database Toolbar */}
