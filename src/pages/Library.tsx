@@ -36,10 +36,6 @@ export function Library() {
             {/* Breadcrumb justo arriba del H1 (Estilo Notion clásico) */}
             <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Biblioteca de recursos' }]} />
 
-            <header className="mb-8 mt-2">
-                <h1 className="text-[40px] font-bold text-on-background leading-tight mb-2">Biblioteca</h1>
-            </header>
-
             {/* Notion Database Toolbar */}
             <div className="flex items-center justify-between border-b border-border pb-1 mb-4">
                 <div className="flex items-center gap-1">

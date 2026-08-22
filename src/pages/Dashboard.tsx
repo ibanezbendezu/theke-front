@@ -16,7 +16,7 @@ export function Dashboard() {
         <div className="w-full px-10 md:px-16 py-12 pb-32">
 
             <header className="mb-10">
-                <h1 className="text-[40px] font-bold text-on-background leading-tight mb-2">Inicio</h1>
+                <h1 className="text-[25px] font-bold text-on-background leading-tight mb-2">Inicio</h1>
                 <div className="flex items-center gap-2 mt-4">
                     <Button variant="secondary" icon={LayoutTemplate}>Plantillas</Button>
                     <Button variant="primary" icon={Plus} onClick={() => navigate('/canvas/new')}>Nuevo Lienzo</Button>

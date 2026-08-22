@@ -19,10 +19,6 @@ export function Projects() {
 
             <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Proyectos' }]} />
 
-            <header className="mb-8 mt-2">
-                <h1 className="text-[40px] font-bold text-on-background leading-tight mb-2">Proyectos</h1>
-            </header>
-
             <div className="flex items-center justify-between border-b border-border pb-1 mb-4">
                 <div className="flex items-center gap-1">
                     <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} onClick={() => setViewMode('list')}>Tabla</Button>
