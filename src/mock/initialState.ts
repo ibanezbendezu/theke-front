@@ -35,7 +35,15 @@ export const initialNodes: FlowNode[] = [
             type: 'image',
             url: 'https://images.unsplash.com/photo-1618761714954-0b8cd0026356?auto=format&fit=crop&q=80&w=600' // Imagen de prueba
         },
-    }
+    },
+    {
+        id: 'text-1',
+        type: 'text',
+        position: { x: 100, y: 100 },
+        data: {
+            text: 'Arquitectura del Proyecto 🚀\n\nEste es un lienzo de prueba. Puedes hacer clic aquí y editar este texto como si fuera un documento de Notion. Las cajas crecerán automáticamente hacia abajo.',
+        },
+    },
 ];
 
 export const initialEdges: Edge[] = [];
