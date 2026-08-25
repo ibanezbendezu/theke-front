@@ -13,10 +13,15 @@ import { useCanvasStore } from '../../store/useCanvasStore';
 import { MediaNode } from './nodes/MediaNode';
 import { TextNode } from './nodes/TextNode';
 import { CanvasToolbar } from './CanvasToolbar'; // <--- 1. Importa la barra
+import { EditableEdge } from './edges/EditableEdge';
 
 const nodeTypes: NodeTypes = {
     media: MediaNode,
     text: TextNode,
+};
+
+const edgeTypes = {
+    editable: EditableEdge,
 };
 
 function CanvasCore() {
@@ -111,6 +116,7 @@ function CanvasCore() {
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes} // <--- 3. Le pasamos el diccionario a React Flow
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
