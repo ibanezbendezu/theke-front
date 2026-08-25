@@ -1,17 +1,29 @@
-import { Menu, MoreHorizontal } from 'lucide-react';
+import { Menu, MoreHorizontal, Home, Folder, FileText, Globe } from 'lucide-react';
+import { useLocation, Link } from 'react-router-dom';
+import React from 'react';
 
 interface TopbarProps {
     isSidebarOpen: boolean;
     setIsOpen: (val: boolean) => void;
 }
 
-export function Topbar({ isSidebarOpen, setIsOpen }: TopbarProps) {
-    return (
-        <header className="flex items-center justify-between h-12 px-3 w-full flex-shrink-0 bg-background text-on-background">
+// Mapeo para traducir las rutas base a español con sus iconos
+const routeDictionary: Record<string, { name: string, icon: React.ElementType }> = {
+    'library': { name: 'Biblioteca', icon: FileText },
+    'projects': { name: 'Proyectos', icon: Folder },
+    'explore': { name: 'Explorar', icon: Globe },
+};
 
-            {/* LADO IZQUIERDO: Breadcrumbs y Botón Hamburguesa */}
+export function Topbar({ isSidebarOpen, setIsOpen }: TopbarProps) {
+    const location = useLocation();
+
+    // Convertimos la URL "/library/conquistadores" en un array: ['library', 'conquistadores']
+    const pathnames = location.pathname.split('/').filter((x) => x);
+
+    return (
+        <header className="flex items-center justify-between h-12 px-3 w-full flex-shrink-0 bg-background text-on-background border-b border-border/30">
+
             <div className="flex items-center gap-1 overflow-hidden">
-                {/* Si el sidebar está cerrado, el menú hamburguesa aparece aquí (estilo Notion) */}
                 {!isSidebarOpen && (
                     <button
                         onClick={() => setIsOpen(true)}
@@ -22,33 +34,41 @@ export function Topbar({ isSidebarOpen, setIsOpen }: TopbarProps) {
                     </button>
                 )}
 
-                {/* Ruta de navegación (Breadcrumbs) - Datos basados en tu mockup */}
+                {/* Contenedor del Breadcrumb */}
                 <div className="flex items-center text-[14px]">
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-[4px] hover:bg-surface-variant cursor-pointer transition-colors max-w-[150px]">
+                    {/* El nodo raíz siempre fijo */}
+                    <Link to="/" className="flex items-center gap-1.5 px-2 py-1 rounded-[4px] hover:bg-surface-variant cursor-pointer transition-colors max-w-[150px]">
+                        <Home size={16} className="text-outline flex-shrink-0" />
                         <span className="font-medium truncate">Aarón's Notion HQ</span>
-                    </div>
+                    </Link>
 
-                    <span className="text-outline/40 mx-0.5 select-none">/</span>
+                    {/* Mapeo dinámico del resto de la ruta */}
+                    {pathnames.map((value, index) => {
+                        const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+                        const isKnownRoute = routeDictionary[value];
 
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-[4px] hover:bg-surface-variant cursor-pointer transition-colors max-w-[150px]">
-                        <span className="font-medium truncate">Conquistadores</span>
-                    </div>
+                        // Si es una ruta base conocida, usamos su diccionario. Si es una carpeta dinámica, capitalizamos el nombre.
+                        const name = isKnownRoute ? isKnownRoute.name : decodeURIComponent(value).charAt(0).toUpperCase() + decodeURIComponent(value).slice(1);
+                        const Icon = isKnownRoute ? isKnownRoute.icon : Folder;
 
-                    <span className="text-outline/40 mx-0.5 select-none">/</span>
-
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-[4px] hover:bg-surface-variant cursor-pointer transition-colors max-w-[150px]">
-                        <span className="font-medium truncate">Content</span>
-                    </div>
+                        return (
+                            <React.Fragment key={to}>
+                                <span className="text-outline/40 mx-0.5 select-none">/</span>
+                                <Link to={to} className="flex items-center gap-1.5 px-2 py-1 rounded-[4px] hover:bg-surface-variant cursor-pointer transition-colors max-w-[150px]">
+                                    <Icon size={16} className={`${isKnownRoute ? 'text-outline' : 'text-primary'} flex-shrink-0`} />
+                                    <span className="font-medium truncate">{name}</span>
+                                </Link>
+                            </React.Fragment>
+                        );
+                    })}
                 </div>
             </div>
 
-            {/* LADO DERECHO: Acciones */}
             <div className="flex items-center gap-1 flex-shrink-0 text-outline">
                 <button className="p-1.5 rounded-[4px] hover:bg-surface-variant transition-colors" title="Options">
                     <MoreHorizontal size={18} />
                 </button>
             </div>
-
         </header>
     );
 }

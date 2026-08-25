@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Folder, FileText, Image as ImageIcon, Link as LinkIcon, Film, Plus, MoreHorizontal, ArrowUpDown } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { Breadcrumb } from '../components/ui/Breadcrumb';
 
 // Mock de datos
 const mockFolders = [
@@ -20,6 +20,16 @@ const mockFiles = [
 export function Library() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const handleFolderClick = (folderName: string) => {
+        // Limpiamos el nombre para usarlo en la URL (minúsculas y guiones en vez de espacios)
+        const slug = folderName.toLowerCase().replace(/\s+/g, '-');
+        // Empujamos la nueva ruta anidada
+        navigate(`${location.pathname === '/' ? '' : location.pathname}/${slug}`);
+    };
+
     const getIcon = (type: string, size = 24) => {
         switch (type) {
             case 'pdf': return <FileText size={size} className="text-[#E03E3E]" />;
@@ -32,8 +42,6 @@ export function Library() {
 
     return (
         <div className="w-full px-10 md:px-16 py-12 pb-32">
-            <Breadcrumb items={[{ label: 'Mi Espacio' }, { label: 'Biblioteca de recursos' }]} />
-
             {/* Notion Database Toolbar */}
             <div className="flex items-center justify-between border-b border-border pb-1 mb-4">
                 <div className="flex items-center gap-1">
@@ -52,7 +60,13 @@ export function Library() {
             {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {mockFolders.map(folder => (
-                        <Card key={folder.id} title={folder.name} subtitle={`${folder.count} elementos`} icon={getIcon('folder', 32)} />
+                        <Card
+                            key={folder.id}
+                            title={folder.name}
+                            subtitle={`${folder.count} elementos`}
+                            icon={getIcon('folder', 32)}
+                            onClick={() => handleFolderClick(folder.name)} // <--- Clic en Grid
+                        />
                     ))}
                     {mockFiles.map(file => (
                         <Card key={file.id} title={file.name} subtitle={file.date} icon={getIcon(file.type, 32)} />
@@ -66,7 +80,11 @@ export function Library() {
                         <div className="w-32 hidden sm:block font-medium">Última edición</div>
                     </div>
                     {[...mockFolders.map(f => ({...f, type: 'folder', date: '--'})), ...mockFiles].map(item => (
-                        <div key={item.id} className="group flex items-center py-1.5 px-2 hover:bg-surface-variant border-b border-border/30 cursor-pointer transition-colors text-on-background">
+                        <div
+                            key={item.id}
+                            onClick={() => item.type === 'folder' ? handleFolderClick(item.name) : null}
+                            className="group flex items-center py-1.5 px-2 hover:bg-surface-variant border-b border-border/30 cursor-pointer transition-colors text-on-background"
+                        >
                             <div className="flex-1 flex items-center gap-2 font-medium">
                                 {getIcon(item.type, 18)}
                                 <span>{item.name}</span>

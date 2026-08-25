@@ -17,11 +17,11 @@ export const router = createBrowserRouter([
                 element: <Dashboard/>,
             },
             {
-                path: 'library',
+                path: 'library/*',
                 element: <Library/>,
             },
             {
-                path: 'projects',
+                path: 'projects/*',
                 element: <Projects/>,
             },
             {
