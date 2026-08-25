@@ -2,8 +2,6 @@ import { useCallback, useRef, useState } from 'react';
 import {
     ReactFlow,
     Background,
-    Controls,
-    MiniMap,
     type NodeTypes,
     ReactFlowProvider,
     useReactFlow
@@ -14,10 +12,18 @@ import { MediaNode } from './nodes/MediaNode';
 import { TextNode } from './nodes/TextNode';
 import { CanvasToolbar } from './CanvasToolbar'; // <--- 1. Importa la barra
 import { EditableEdge } from './edges/EditableEdge';
+import { ShapeNode } from './nodes/ShapeNode'; // <--- Importar
+import { LinkNode } from "./nodes/LinkNode.tsx";
+import { DocumentNode } from './nodes/DocumentNode';
+import { AudioNode } from './nodes/AudioNode';
 
 const nodeTypes: NodeTypes = {
     media: MediaNode,
     text: TextNode,
+    shape: ShapeNode,
+    link: LinkNode,
+    document: DocumentNode,
+    audio: AudioNode,
 };
 
 const edgeTypes = {
@@ -123,21 +129,12 @@ function CanvasCore() {
                 onConnectStart={onConnectStart} // Escuchamos el inicio
                 onConnectEnd={onConnectEnd}     // Escuchamos el final
                 onPaneClick={onPaneClick}
+                proOptions={{ hideAttribution: true }}
                 fitView
                 className="bg-background"
                 minZoom={0.1}
             >
                 <Background color="var(--color-border)" gap={24} size={2} />
-                <Controls className="bg-surface border-border fill-on-surface-variant" />
-                <MiniMap
-                    nodeColor={(node) => {
-                        if (node.type === 'media') return 'var(--color-note-purple)';
-                        if (node.type === 'text') return 'var(--color-background)';
-                        return node.style?.backgroundColor as string || 'var(--color-surface-variant)';
-                    }}
-                    maskColor="var(--color-background)"
-                    className="bg-surface border border-border rounded-md shadow-sm"
-                />
             </ReactFlow>
 
             {/* MENÚ CONTEXTUAL FLOTANTE (Se renderiza sobre el canvas) */}
