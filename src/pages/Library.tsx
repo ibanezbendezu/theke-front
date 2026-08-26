@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Folder, FileText, Image as ImageIcon, Link as LinkIcon, Film, Plus, MoreHorizontal, ArrowUpDown } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Folder, FileText, Image as ImageIcon, Link as LinkIcon, Film, MoreHorizontal } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { ViewToolbar } from '../components/ui/ViewToolbar'; // <--- Importamos el componente
 
-// Mock de datos
 const mockFolders = [
     { id: '1', name: 'Recursos Proyecto A', count: 12 },
     { id: '2', name: 'Referencias Diseño', count: 5 },
@@ -19,14 +18,11 @@ const mockFiles = [
 
 export function Library() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-
     const navigate = useNavigate();
     const location = useLocation();
 
     const handleFolderClick = (folderName: string) => {
-        // Limpiamos el nombre para usarlo en la URL (minúsculas y guiones en vez de espacios)
         const slug = folderName.toLowerCase().replace(/\s+/g, '-');
-        // Empujamos la nueva ruta anidada
         navigate(`${location.pathname === '/' ? '' : location.pathname}/${slug}`);
     };
 
@@ -41,22 +37,16 @@ export function Library() {
     };
 
     return (
-        <div className="w-full px-10 md:px-16 py-12 pb-32">
-            {/* Notion Database Toolbar */}
-            <div className="flex items-center justify-between border-b border-border pb-1 mb-4">
-                <div className="flex items-center gap-1">
-                    <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} onClick={() => setViewMode('list')}>Tabla</Button>
-                    <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} onClick={() => setViewMode('grid')}>Galería</Button>
-                </div>
+        <div className="w-full px-6 md:px-8 py-6 pb-32">
 
-                <div className="flex items-center gap-2">
-                    {/* Botón Ordenar a la izquierda del Nuevo */}
-                    <Button variant="ghost" className="text-outline hover:text-on-background" icon={ArrowUpDown}>Ordenar</Button>
-                    <Button variant="ghost" className="text-[#2383E2]" icon={Plus}>Nuevo</Button>
-                </div>
-            </div>
+            {/* Barra Reutilizable */}
+            <ViewToolbar
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                onSort={() => console.log('Ordenar click')}
+                onNew={() => console.log('Nuevo click')}
+            />
 
-            {/* Vistas */}
             {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {mockFolders.map(folder => (
@@ -65,7 +55,7 @@ export function Library() {
                             title={folder.name}
                             subtitle={`${folder.count} elementos`}
                             icon={getIcon('folder', 32)}
-                            onClick={() => handleFolderClick(folder.name)} // <--- Clic en Grid
+                            onClick={() => handleFolderClick(folder.name)}
                         />
                     ))}
                     {mockFiles.map(file => (
@@ -82,7 +72,7 @@ export function Library() {
                     {[...mockFolders.map(f => ({...f, type: 'folder', date: '--'})), ...mockFiles].map(item => (
                         <div
                             key={item.id}
-                            onClick={() => item.type === 'folder' ? handleFolderClick(item.name) : null}
+                            onClick={() => item.type === 'folder' ? handleFolderClick(item.name) : undefined}
                             className="group flex items-center py-1.5 px-2 hover:bg-surface-variant border-b border-border/30 cursor-pointer transition-colors text-on-background"
                         >
                             <div className="flex-1 flex items-center gap-2 font-medium">
