@@ -18,8 +18,9 @@ interface CanvasState {
     onEdgesChange: (changes: EdgeChange[]) => void;
     onConnect: (connection: Connection) => void;
     addNode: (node: FlowNode) => void;
-    // Nueva función para actualizar texto y forma de la flecha en tiempo real
-    updateEdgeData: (edgeId: string, newData: any) => void;
+    updateEdgeData: (edgeId: string, newData: Record<string, unknown>) => void;
+    // Función para manejar el agrupamiento
+    setNodeParent: (nodeId: string, parentId: string | undefined, position: {x: number, y: number}) => void;
 }
 
 export const useCanvasStore = create<CanvasState>((set, get) => ({
@@ -41,7 +42,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
             target: connection.target,
             sourceHandle: connection.sourceHandle,
             targetHandle: connection.targetHandle,
-            type: 'editable', // <--- Asignamos nuestra flecha mutante
+            type: 'editable',
             data: { label: '', controlPoint: null },
         };
         set({ edges: addEdge(newEdge, get().edges) });
@@ -56,6 +57,33 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
             edges: get().edges.map((e) =>
                 e.id === edgeId ? { ...e, data: { ...e.data, ...newData } } : e
             )
+        });
+    },
+
+    setNodeParent: (nodeId, parentId, position) => {
+        set((state) => {
+            // 1. Asignamos el padre y las coordenadas relativas
+            const updatedNodes = state.nodes.map((node) => {
+                if (node.id === nodeId) {
+                    return {
+                        ...node,
+                        parentId,
+                        position,
+                        expandParent: parentId ? true : undefined,
+                    };
+                }
+                return node;
+            });
+
+            // 2. REORDENAMIENTO CRÍTICO: Movemos el hijo al final del arreglo
+            // Esto asegura que React Flow lo procese *después* del padre y no se rompa el drag conjunto
+            const childIndex = updatedNodes.findIndex(n => n.id === nodeId);
+            if (childIndex !== -1) {
+                const [childNode] = updatedNodes.splice(childIndex, 1);
+                updatedNodes.push(childNode);
+            }
+
+            return { nodes: updatedNodes };
         });
     },
 }));
