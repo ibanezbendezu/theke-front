@@ -27,6 +27,9 @@ playwright-report
 # Personal BMAD configuration
 _bmad/config.user.toml
 
+# Personal Codex configuration
+.codex/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
