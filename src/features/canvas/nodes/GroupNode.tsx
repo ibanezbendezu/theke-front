@@ -14,9 +14,7 @@ export function GroupNode({ data, selected, width = 350, height = 250 }: NodePro
     const { label = 'Nuevo Grupo', color = 'var(--color-surface-variant)' } = data;
 
     return (
-        // 1. El contenedor relativo recibe el width y height para que el Resizer funcione.
-        <div className="relative" style={{ width, height }}>
-
+        <div className="relative group" style={{ width, height }}>
             <NodeResizer
                 color="var(--color-primary)"
                 isVisible={selected}
@@ -24,7 +22,6 @@ export function GroupNode({ data, selected, width = 350, height = 250 }: NodePro
                 minHeight={150}
             />
 
-            {/* 2. CAJA PRINCIPAL: Le quitamos "transition-all" para eliminar el lag al redimensionar */}
             <div
                 className={cn(
                     "w-full h-full flex flex-col bg-background border rounded-xl overflow-hidden shadow-sm transition-colors",
@@ -41,14 +38,8 @@ export function GroupNode({ data, selected, width = 350, height = 250 }: NodePro
                     className="flex-1 w-full h-full"
                     style={{ backgroundColor: color, opacity: 0.3 }}
                 />
-
-                <Handle type="target" position={Position.Left} className="w-3 h-3 bg-surface border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Handle type="source" position={Position.Right} className="w-3 h-3 bg-surface border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Handle type="target" position={Position.Top} className="w-3 h-3 bg-surface border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity" id="top" />
-                <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-surface border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity" id="bottom" />
             </div>
 
-            {/* 3. BARRA INFERIOR FLOTANTE: "top-full" la empuja fuera de la caja, evitando que los hijos la pisen */}
             <div className="absolute top-full left-0 w-full mt-2 px-3 py-2 flex items-center gap-2 border border-border bg-surface/90 backdrop-blur-md rounded-lg shadow-sm z-50">
                 <Layers size={14} className="text-primary flex-shrink-0" />
                 <input
@@ -58,6 +49,10 @@ export function GroupNode({ data, selected, width = 350, height = 250 }: NodePro
                 />
             </div>
 
+            <Handle type="target" position={Position.Left} className="w-3 h-3 bg-surface border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity z-50" />
+            <Handle type="source" position={Position.Right} className="w-3 h-3 bg-surface border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity z-50" />
+            <Handle type="target" position={Position.Top} className="w-3 h-3 bg-surface border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity z-50" id="top" />
+            <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-surface border-2 border-primary opacity-0 group-hover:opacity-100 transition-opacity z-50" id="bottom" />
         </div>
     );
 }
