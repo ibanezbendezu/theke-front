@@ -1,4 +1,4 @@
-# Logs
+# Logs and diagnostics
 logs
 *.log
 npm-debug.log*
@@ -7,20 +7,36 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies and build output
 node_modules
 dist
 dist-ssr
+coverage
+test-results
+playwright-report
+*.tsbuildinfo
+.eslintcache
+.npm-cache
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
 *.local
+
+# Personal BMAD configuration
+_bmad/config.user.toml
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-/.idea/
