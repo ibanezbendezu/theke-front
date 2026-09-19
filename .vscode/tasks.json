@@ -1,0 +1,27 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "dev",
+      "label": "Theke: iniciar desarrollo",
+      "isBackground": true,
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "type": "npm",
+      "script": "lint",
+      "label": "Theke: revisar código",
+      "problemMatcher": ["$eslint-stylish"],
+      "group": "test"
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "label": "Theke: compilar producción",
+      "problemMatcher": ["$tsc"],
+      "group": "build"
+    }
+  ]
+}

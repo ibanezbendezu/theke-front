@@ -1,4 +1,5 @@
 import type {ReactNode} from 'react';
+import { ThemeProvider } from './../providers/ThemeProvider';
 
 interface ProvidersProps {
     children: ReactNode;
@@ -7,7 +8,9 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
     return (
         <>
-            {children}
+            <ThemeProvider defaultTheme="system" storageKey="theke-theme">
+                {children}
+            </ThemeProvider>
         </>
     );
 }
