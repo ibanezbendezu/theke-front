@@ -98,13 +98,14 @@ flowchart LR
 
 - **Binds:** FR-36..FR-40; NFR-10, NFR-13
 - **Prevents:** edición de comentarios ajenos, abuso sin límites o pérdida del borrador por bloqueo.
-- **Rule:** La identidad anónima usa un token opaco en cookie del dominio API `HttpOnly Secure; Path=/`, enviada con `credentials: include`, no renovable y válida 30 días. Producción usa `SameSite=Lax` bajo `app.*`/`api.*`; previews cross-site usan `SameSite=None` solo junto con CORS y `Origin` exactos, JSON obligatorio y token CSRF ligado a la sesión. El ownership persistido es un seudónimo HMAC de token + `shareId`, por lo que no enlaza Compartidos; al expirar se pierde la edición previa. Cada Comentario pertenece a un Compartido, no al conocimiento canónico; guarda ancla estable, última coordenada y snapshot mínimo, y puede estar activo, resuelto, eliminado o sin anclaje. Crear exige Compartido activo y comentarios abiertos; el visitante solo edita con su identidad y el autor solo resuelve o elimina, nunca reescribe texto ajeno. Los límites transaccionales se aplican por Compartido, sesión y huella IP con HMAC rotatoria, sin CAPTCHA inicial; el rechazo conserva el borrador. Los umbrales se fijan en historias y se ajustan con el piloto.
+- **Rule:** La identidad anónima usa un token opaco en cookie del dominio API `HttpOnly Secure; Path=/`, enviada con `credentials: include`, no renovable y válida 30 días. Producción usa `SameSite=Lax` bajo `app.*`/`api.*`; previews cross-site usan `SameSite=None` solo junto con CORS y `Origin` exactos, JSON obligatorio y token CSRF ligado a la sesión. El ownership persistido es un seudónimo HMAC de token + `shareId`, por lo que no enlaza Compartidos; al expirar se pierde la edición previa. Cada Comentario pertenece a un Compartido, no al conocimiento canónico; guarda ancla estable, última coordenada y snapshot mínimo, y puede estar activo, resuelto, eliminado o sin anclaje. Crear exige Compartido activo y comentarios abiertos; el visitante solo edita con su identidad y el autor solo resuelve o elimina, nunca reescribe texto ajeno. Sin CAPTCHA inicial, el comentario admite 5.000 caracteres y los límites transaccionales son 5 mutaciones/minuto y 30/hora por sesión, 20/minuto y 100/hora por huella IP HMAC y 100/hora por Compartido; responden `429` con `Retry-After`, conservan el borrador y son configuración auditada ajustable tras el piloto.
 
 ### AD-11 — Pipeline privado de uploads [ADOPTED]
 
 - **Binds:** FR-6..FR-8, FR-12..FR-14, FR-32; NFR-8, NFR-12, NFR-16
 - **Prevents:** publicación de archivos no inspeccionados y rutas controladas por el usuario.
 - **Rule:** La API valida intención/cuota, crea `Resource` + `Upload` con IDs estables y una key de cuarentena única por `uploadId`, y entrega una URL PUT presignada de TTL corto con restricciones soportadas de tipo/checksum; el navegador carga directo al bucket privado. La URL se considera reutilizable hasta expirar. La máquina es `initiated -> uploaded -> scanning -> ready | rejected | failed`: finalize cierra lógicamente el upload y registra metadatos; el worker descarga un snapshot de cuarentena, verifica tamaño/MIME/hash, escanea esos mismos bytes y solo entonces los escribe en una key limpia nueva e inmutable derivada del hash. La `ResourceVersion` candidata referencia únicamente la key limpia y se promueve a `current_version_id` en la transición atómica a `ready`; jamás referencia cuarentena. Reintentos conservan `resourceId`, son idempotentes y limpian huérfanos. El Canvas admite placeholders no terminales. Un validador de publicabilidad bloquea multimedia sin alternativas accesibles. El nombre original es metadato, nunca ruta.
+- **Baseline del piloto:** máximo 20 archivos por lote, 250 MiB por archivo y 5 GiB por Cuenta. Audio de hasta 120 minutos y video de hasta 30 minutos reciben preview; si exceden duración pero no tamaño, permanecen como archivo genérico sin análisis multimedia. Se admiten texto/Markdown, PDF, JPEG, PNG, WebP, GIF, MP3, M4A/AAC, OGG, WAV, MP4 H.264/AAC, WebM y documentos ofimáticos comunes como genéricos; se rechazan ejecutables, scripts activos y contenedores cifrados no inspeccionables. El motor es ClamAV `clamd` en un servicio privado, alimentado mediante `INSTREAM`, con firmas de `freshclam`, health check y fallo cerrado; su socket jamás se expone a Internet y `MaxFileSize`/`MaxScanSize` cubren el límite de upload.
 
 ### AD-12 — Trabajo durable e idempotente [ADOPTED]
 
@@ -116,7 +117,7 @@ flowchart LR
 
 - **Binds:** FR-24..FR-31; NFR-5, NFR-14..NFR-18
 - **Prevents:** dependencia directa de un proveedor, análisis implícito o cambios no confirmados.
-- **Rule:** La IA es un puerto server-side opt-in. Cada ejecución persiste un manifiesto exacto de IDs y `ResourceVersion`, proveedor/modelo, finalidad, resultado, procedencia y versión de la política aceptada. Ningún proveedor puede usar contenido privado para entrenamiento sin consentimiento separado y explícito. Aceptar una sugerencia ejecuta los mismos comandos que la alternativa manual; proveedor y modelo permanecen diferidos y deben declarar retención y uso de datos antes de integrarse.
+- **Rule:** La IA es un puerto server-side opt-in. Cada ejecución persiste un manifiesto exacto de IDs y `ResourceVersion`, proveedor/modelo, finalidad, resultado, procedencia y versión de la política aceptada. Ningún proveedor puede usar contenido privado para entrenamiento sin consentimiento separado y explícito. Aceptar una sugerencia ejecuta los mismos comandos que la alternativa manual. El baseline del MVP usa OpenAI Responses API con `gpt-5.6-terra`, `reasoning.effort: medium` y `store: false`; no usa Conversations, Files, File Search, web search ni herramientas alojadas. Theke extrae y envía solo texto e imágenes del alcance autorizado, no opta al entrenamiento voluntario e informa que los logs de abuso del proveedor pueden conservar contenido hasta 30 días. Cada ejecución admite como máximo 50.000 tokens de entrada y 4.000 de salida; el piloto limita 10 ejecuciones por Cuenta al día y USD 5 mensuales por Cuenta, deteniéndose en el primer límite alcanzado. El modelo y las cuotas quedan detrás de configuración versionada; cualquier sustitución exige evaluación, nueva versión de política y reconsentimiento cuando cambien las condiciones.
 
 ### AD-14 — SSE no es autoridad [ADOPTED]
 
@@ -152,7 +153,7 @@ flowchart LR
 
 - **Binds:** NFR-4, NFR-6, NFR-8
 - **Prevents:** asumir que el backup de PostgreSQL recupera objetos del bucket.
-- **Rule:** Antes del piloto externo existe un plan con backups diarios de PostgreSQL, exportación verificada y copia periódica de objetos fuera del bucket principal. RPO, RTO y frecuencia se aprueban antes del piloto y un restore drill restaura DB + objetos y valida referencias cruzadas.
+- **Rule:** Antes del piloto externo se habilitan snapshots diarios y PITR disponible de Railway. Cada noche se produce un `pg_dump` cifrado y una copia incremental de objetos y manifiestos hacia Backblaze B2, una cuenta/proveedor separado, con Object Lock en modo governance por 30 días. El objetivo inicial es RPO 24 horas y RTO 4 horas; un restore drill mensual restaura DB + objetos en un entorno aislado, reaplica tombstones pendientes y valida referencias cruzadas. Credenciales de backup son write-only donde resulte posible y están separadas de producción.
 
 ### AD-20 — Documento de Canvas validado [ADOPTED]
 
@@ -170,7 +171,7 @@ flowchart LR
 
 - **Binds:** FR-2, FR-10, FR-23; NFR-6, NFR-8, NFR-9
 - **Prevents:** borrados irreversibles ambiguos y retenciones incompatibles entre módulos.
-- **Rule:** Archivar usa `archived_at` y es reversible. El borrado definitivo es un comando server-side que presenta impacto, respeta referencias y aplica una política única de retención; exportación, borrado de cuenta y plazos de retención son gates documentados antes de producción.
+- **Rule:** Archivar usa `archived_at` y es reversible mientras la Cuenta permanezca activa. El borrado definitivo es un comando server-side que presenta impacto, respeta referencias y entra en una ventana recuperable de 30 días antes del purgado. Los Compartidos revocados y sus comentarios permanecen 90 días visibles solo para el autor. Antes de borrar una Cuenta se ofrece un ZIP con manifiesto JSON, notas Markdown y archivos originales propios; la Cuenta y sus datos activos se purgan al vencer 30 días. Backups expiran dentro de 30 días y no se modifican selectivamente: toda restauración reaplica tombstones antes de servir tráfico. Manifiestos de IA conservan la procedencia mientras exista contenido derivado, pero el texto bruto local de prompt/respuesta se elimina a los 30 días.
 
 ### AD-23 — Consultas progresivas [ADOPTED]
 
@@ -326,16 +327,9 @@ theke-api/                 # repositorio backend separado
 
 ## Deferred
 
-- Proveedor y modelo de IA: elegir antes de implementar FR-25..FR-31.
-- Motor de escaneo de malware: elegir antes de habilitar exposición pública de uploads.
-- Proveedor de backup externo: elegir antes del piloto público.
-- Límites concretos de tamaño, duración, formatos y cuota: fijar en historias de carga.
-- Umbrales concretos de antiabuso: fijar en historias de comentarios y ajustar con datos del piloto.
 - Canales de notificación adicionales: el MVP solo fija bandeja interna.
-- Reglas de edad y consentimiento: requieren revisión de Producto/legal antes del lanzamiento público.
-- Métodos iniciales de acceso en Clerk: recomiendo email con código + Google; confirmar antes de implementar Cuenta.
+- Reglas de edad y consentimiento para un lanzamiento abierto: requieren revisión de Producto/legal; el piloto permanece limitado a adultos invitados.
 - Clerk Organizations: no usar en el MVP; evaluar solo cuando exista colaboración real entre miembros.
-- Política detallada de exportación, borrado definitivo y retención: aprobar antes de producción.
 
 ## Decisiones confirmadas
 
@@ -350,3 +344,17 @@ Confirmadas por el usuario el 2026-09-21:
 7. Documento JSONB versionado por Diagrama para la composición local.
 8. Estrategia antiabuso sin CAPTCHA inicial y sus límites por Compartido, sesión e IP HMAC.
 9. Autoguardado por documento completo con revisión optimista, en lugar de operaciones incrementales.
+10. Acceso inicial de Clerk mediante código de un solo uso por correo y Google; no se usa contraseña propia de Theke.
+11. Límites iniciales de 20 archivos por lote, 250 MiB por archivo, 5 GiB por Cuenta, preview de audio hasta 120 minutos y video hasta 30 minutos.
+12. ClamAV `clamd` privado con `freshclam` como scanner del MVP y fallo cerrado.
+13. OpenAI Responses API con `gpt-5.6-terra`, esfuerzo medio y `store:false` como adaptador inicial de IA; 50.000 tokens de entrada, 4.000 de salida, 10 ejecuciones diarias y USD 5 mensuales por Cuenta.
+14. Backblaze B2 con Object Lock de 30 días como destino externo de backups; RPO 24 horas, RTO 4 horas y restore drill mensual.
+15. Retención recuperable de 30 días, historial revocado de 90 días y export ZIP antes de eliminar Cuenta.
+
+## Fuentes operativas verificadas
+
+- OpenAI, modelos vigentes y selección: https://developers.openai.com/api/docs/models
+- OpenAI, controles de datos y retención: https://developers.openai.com/api/docs/guides/your-data
+- ClamAV, operación de `clamd` y `clamdscan`: https://docs.clamav.net/manual/Usage/Scanning.html
+- Railway, backup y restore de PostgreSQL: https://docs.railway.com/guides/postgres-backups-restores
+- Backblaze B2, Object Lock: https://www.backblaze.com/docs/cloud-storage-object-lock

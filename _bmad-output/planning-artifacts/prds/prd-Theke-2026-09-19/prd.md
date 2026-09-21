@@ -226,12 +226,12 @@ El primer protocolo será un piloto moderado con `[ASSUMPTION: al menos 10 autor
 
 Ninguna de estas decisiones bloquea UX conceptual. Deben cerrarse en el momento indicado antes de convertir la capacidad afectada en historias listas para desarrollo:
 
-1. **Almacenamiento:** Producto y Arquitectura fijarán límites de tamaño, duración, formatos y cuota antes de las historias de carga; hasta entonces, los tipos y comportamientos definidos en FR-7 son el mínimo funcional, no una promesa de cuota.
-2. **Identidad:** Arquitectura y UX elegirán el método de autenticación y la duración de la identidad anónima antes de las historias de acceso y comentarios; permanecen fijos los resultados de FR-1 y FR-36.
+1. **Almacenamiento — resuelto para el piloto:** 20 archivos por lote, 250 MiB por archivo y 5 GiB por Cuenta; preview de audio hasta 120 minutos y video hasta 30 minutos. Arquitectura y las historias conservan el detalle de formatos, cuarentena y ClamAV.
+2. **Identidad — resuelto para el piloto:** Clerk usa código de un solo uso por correo y Google; la identidad anónima usa una cookie no renovable de 30 días limitada al Compartido.
 3. **Notificaciones:** Producto decidirá si existen canales adicionales antes de implementar notificaciones; el MVP solo exige bandeja interna.
-4. **Gobierno de datos:** Arquitectura y Producto definirán eliminación definitiva, copias de seguridad y exportación antes de implementar persistencia de producción o abrir un piloto externo.
-5. **Edad y consentimiento:** Producto y revisión legal fijarán las reglas antes de cualquier lanzamiento público; el piloto inicial estará limitado a adultos invitados.
-6. **Proveedor de IA:** Arquitectura y Producto elegirán proveedor, retención contractual y coste máximo antes de implementar FR-25 a FR-31; sin proveedor aprobado, el recorrido manual sigue siendo entregable.
+4. **Gobierno de datos — resuelto para el piloto:** ventana recuperable de 30 días, historial de Compartidos revocados por 90 días, export ZIP previa a eliminación de Cuenta, backup externo en Backblaze B2 con Object Lock de 30 días, RPO 24 horas y RTO 4 horas.
+5. **Edad y consentimiento:** el piloto inicial queda limitado a adultos invitados; un lanzamiento abierto continúa bloqueado hasta revisión de Producto/legal.
+6. **Proveedor de IA — resuelto para el MVP:** OpenAI Responses API con `gpt-5.6-terra`, `store:false` y esfuerzo medio; máximo 50.000 tokens de entrada, 4.000 de salida, 10 ejecuciones diarias y USD 5 mensuales por Cuenta. Se informa la retención del proveedor y el recorrido manual sigue siendo entregable.
 7. **Rendimiento y métricas:** Ingeniería y Producto sustituirán los umbrales provisionales después de medir el prototipo y completar el primer piloto, antes de declarar el MVP completo.
 
 ## Índice de supuestos
