@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theke — Vista compartida móvil</title>
+  <style>
+    /*
+      Secciones gobernantes:
+      DESIGN.md — preview-theme: dark; Colors > Transparencia semántica; Layout & Spacing;
+      Elevation & Depth; Components: Glass Shell, Resource Card, Semantic Relation,
+      Comment Marker, Comment Composer, Sheet/Dialog y Button
+      EXPERIENCE.md — Information Architecture: Vista compartida; Component Patterns: Comment Marker
+      y Comment Composer; State Patterns: Móvil compartido y comentario limitado/error
+      EXPERIENCE.md — Responsive & Platform: móvil; Key Flows: Flow 5 (pasos 1–7 y fallo)
+      PRD — FR-35 Exploración pública; FR-36 Identidad; FR-37 Comentario contextual; FR-38 Edición propia
+    */
+    :root{--background:#FFFFFF;--foreground:#37352F;--muted:#666663;--surface:#F7F7F5;--raised:#FFFFFF;--active:#37352F14;--border:#37352F29;--border-strong:#37352F73;--control:#666663;--primary:#2383E2;--primary-strong:#1668A9;--relation:#2383E2;--comment:#D9730D;--on-comment:#191919;--error:#C9372C;--doc:#787774;--note:#DFAB01;--shadow:0 8px 24px #0000001F}
+    *{box-sizing:border-box}body{margin:0;background:#ECECE9;color:var(--foreground);font-family:'JetBrains Sans',Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45}.page{padding:28px}.heading{max-width:860px;margin:0 auto 18px;text-align:center}.heading h1{font-size:18px;margin:0 0 3px}.heading p{margin:0;color:var(--muted)}.stage{display:flex;align-items:flex-start;justify-content:center;gap:24px;flex-wrap:wrap}
+    .phone{width:390px;height:790px;border:7px solid #292929;border-radius:32px;background:#fff;box-shadow:0 16px 44px #00000026;overflow:hidden;position:relative}.statusbar{height:26px;padding:6px 16px 0;display:flex;font-size:10px;font-weight:650}.statusbar span:last-child{margin-left:auto}.mobile-top{height:46px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:7px;background:var(--surface)}.mobile-top .title{font-weight:650;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mobile-top .shared{display:block;color:var(--muted);font-weight:400;font-size:9px}.mobile-top button{margin-left:auto;height:36px;border:1px solid var(--comment);border-radius:4px;background:#FFF8F1;color:var(--foreground);padding:0 9px;font-weight:650}
+    .canvas{height:calc(100% - 72px);position:relative;overflow:hidden;background-color:#fff;background-image:radial-gradient(#37352F20 1px,transparent 1px);background-size:18px 18px}.group{position:absolute;left:34px;top:70px;width:330px;height:264px;border:1px solid var(--border-strong);border-radius:6px;background:#37352F08}.group-label{position:absolute;top:100%;left:6px;padding-top:4px;font-size:10px;font-weight:650}.card{position:absolute;width:135px;min-height:86px;border:1px solid var(--border);border-radius:8px;background:#fff;padding:9px}.card.a{left:16px;top:40px;border-left:3px solid var(--doc)}.card.b{right:15px;bottom:40px;border-left:3px solid var(--note)}.kind{font-size:9px;color:var(--muted);margin-bottom:6px}.card strong{font-size:11px;display:block;line-height:1.3}.card small{font-size:9px;color:var(--muted)}.line{position:absolute;left:140px;top:133px;width:82px;height:2px;background:var(--relation);transform:rotate(22deg)}.line:after{content:"";position:absolute;right:-2px;top:-4px;border-left:7px solid var(--relation);border-top:5px solid transparent;border-bottom:5px solid transparent}.relation-label{position:absolute;left:147px;top:142px;border:1px solid var(--border);border-radius:999px;background:#fff;padding:1px 5px;font-size:9px}.marker{position:absolute;left:209px;top:158px;width:28px;height:28px;border-radius:999px;background:var(--comment);color:var(--on-comment);border:2px solid #fff;box-shadow:0 0 0 2px var(--border-strong);display:grid;place-items:center;font-size:12px;font-weight:750;z-index:3}.hint{position:absolute;left:10px;right:10px;top:10px;border:1px solid var(--border);border-left:3px solid var(--comment);border-radius:4px;background:#FFFFFFF5;padding:6px 8px;font-size:10px;box-shadow:0 2px 8px #00000014;backdrop-filter:blur(10px)}.zoom{position:absolute;right:10px;top:274px;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:#FFFFFFE8;backdrop-filter:blur(10px)}.zoom button{width:36px;height:36px;border:0;border-bottom:1px solid var(--border);background:transparent;font-size:17px}.zoom button:last-child{border-bottom:0}
+    .sheet{position:absolute;left:0;right:0;bottom:0;height:316px;background:var(--raised);border-top:1px solid var(--border);border-radius:12px 12px 0 0;box-shadow:0 -4px 16px #0000001F;padding:8px 14px 16px;z-index:4}.handle{width:36px;height:3px;background:#C9C9C5;border-radius:99px;margin:0 auto 9px}.sheet-head{display:flex;align-items:start}.sheet h2{font-size:16px;margin:0 0 2px}.close{margin-left:auto;width:36px;height:36px;border:1px solid var(--control);border-radius:4px;background:#fff;font-size:18px}.context{font-size:10px;color:var(--muted);margin-bottom:9px}.context b{color:var(--foreground)}label{display:block;font-size:11px;font-weight:650;margin:7px 0 4px}.field{width:100%;border:1px solid var(--control);border-radius:4px;background:#fff;padding:7px 8px;height:36px}.textarea{height:66px;resize:none}.sheet-footer{display:flex;align-items:center;margin-top:10px}.identity{font-size:9px;color:var(--muted);max-width:190px}.publish{margin-left:auto;height:36px;border:1px solid var(--primary-strong);border-radius:4px;background:var(--primary-strong);color:#fff;padding:0 12px;font-weight:650}
+    .alternate{width:390px;border:1px solid var(--border);border-radius:4px;background:var(--surface);padding:10px 12px}.alternate .label{font-size:10px;color:var(--muted);font-weight:650;margin-bottom:6px}.error-card{border-left:3px solid var(--error);background:var(--raised);padding:8px 9px}.error-card strong{display:block;font-size:12px;margin-bottom:3px}.error-card p{font-size:11px;margin:0 0 8px;color:var(--muted)}.error-card button{height:36px;border:1px solid var(--control);border-radius:4px;background:#fff;padding:0 10px;font-weight:650}.error-card small{margin-left:7px;color:var(--muted)}
+    @supports not (backdrop-filter:blur(10px)){.hint,.zoom{background:var(--raised)}}
+    @media(max-width:500px){.page{padding:14px}.phone{width:min(390px,100%);height:760px}.alternate{width:min(390px,100%)}.heading{text-align:left}}
+    /* Dark preview: mobile shared view uses the same cold-neutral shell and opaque content. */
+:root{--background:#1E1F22;--foreground:#DFE1E5;--muted:#9DA0A8;--surface:#2B2D30;--raised:#313338;--active:#3574F033;--border:#393B40;--border-strong:#6F737A;--control:#6F737A;--primary:#3574F0;--primary-strong:#3264C8;--relation:#6EA6FF;--comment:#FFA344;--on-comment:#191919;--error:#FF7369;--doc:#B4B4B0;--note:#FFDC49}
+    body{background:#151619;color:var(--foreground)}.phone{background:var(--background);border-color:#0F1012;box-shadow:0 24px 70px #00000080}
+    .statusbar{background:rgba(43,45,48,.84);backdrop-filter:blur(20px) saturate(1.15)}
+    .mobile-top{background:rgba(43,45,48,.84);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15)}.mobile-top button{background:rgba(49,51,56,.94);border-color:var(--comment);color:var(--foreground)}
+    .canvas{background-color:var(--background);background-image:radial-gradient(#6F737A55 1px,transparent 1px)}.group{background:#3574F014;border-color:var(--border-strong)}
+    .card,.relation-label{background:var(--raised);border-color:var(--border);color:var(--foreground)}.line{background:var(--relation)}.line:after{border-left-color:var(--relation)}
+    .hint,.zoom{background:rgba(43,45,48,.78);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15);color:var(--foreground)}.zoom button{color:var(--foreground);border-color:var(--border)}
+    .sheet{background:var(--raised);border-color:var(--border);box-shadow:0 -16px 44px #00000070}.handle{background:var(--border-strong)}.close{background:var(--surface);border-color:var(--control);color:var(--foreground)}
+.field{background:var(--background);border-color:var(--control);color:var(--foreground)}.publish{background:var(--primary-strong);border-color:var(--primary-strong);color:#fff}
+    .alternate{background:var(--surface);border-color:var(--border)}.error-card{background:var(--raised)}.error-card button{background:var(--background);border-color:var(--control);color:var(--foreground)}
+    @supports not (backdrop-filter:blur(20px)){.statusbar,.mobile-top,.hint,.zoom{background:var(--surface)}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="heading"><h1>Vista compartida móvil · Modo Comentar</h1><p>María explora una composición fija y deja una observación exactamente en la Relación.</p></div>
+    <div class="stage">
+      <section class="phone" aria-label="Teléfono con vista compartida de Theke">
+        <div class="statusbar"><span>9:41</span><span>● ◒ ▰</span></div>
+        <header class="mobile-top"><div class="title">Prólogo y creación<span class="shared">Vista compartida por Daniel</span></div><button>✎ Comentar</button></header>
+        <section class="canvas" aria-label="Grafo fijo compartido">
+          <div class="hint"><b>Modo Comentar</b> · Elige un Recurso, una Relación o un punto del Canvas.</div>
+          <div class="group"><div class="card a"><div class="kind">▤ PDF</div><strong>Comentario a Juan 1</strong><small>Juan 1:1–5</small></div><div class="line"></div><div class="relation-label">sustenta</div><div class="marker" aria-label="Comentario 1 en la relación sustenta">1</div><div class="card b"><div class="kind">▧ NOTA</div><strong>Logos y creación</strong><small>Nota de Daniel</small></div><div class="group-label">Creación y Logos</div></div>
+          <div class="zoom" aria-label="Controles de zoom"><button aria-label="Acercar">＋</button><button aria-label="Alejar">−</button></div>
+          <section class="sheet" role="dialog" aria-labelledby="comment-title"><div class="handle"></div><div class="sheet-head"><div><h2 id="comment-title">Añadir comentario</h2><div class="context">En la Relación <b>“sustenta”</b></div></div><button class="close" aria-label="Cerrar compositor">×</button></div><label for="name">Tu nombre</label><input id="name" class="field" value="María" readonly><label for="comment">Comentario</label><textarea id="comment" class="field textarea" readonly>¿Conviene añadir Juan 1:3 como evidencia directa de esta relación?</textarea><div class="sheet-footer"><span class="identity">Podrás editar tus comentarios mientras esta identidad siga vigente.</span><button class="publish">Publicar</button></div></section>
+        </section>
+      </section>
+      <aside class="alternate" aria-label="Estado alterno al perder conexión"><div class="label">ESTADO ALTERNO · ERROR AL PUBLICAR</div><div class="error-card"><strong>No se pudo publicar el comentario.</strong><p>Tu texto sigue aquí. Reintentar no creará un comentario duplicado.</p><button>Reintentar</button><small>Sin conexión</small></div></aside>
+    </div>
+  </main>
+</body>
+</html>

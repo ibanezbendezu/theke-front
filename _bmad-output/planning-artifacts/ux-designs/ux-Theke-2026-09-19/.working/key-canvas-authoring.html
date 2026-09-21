@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theke — Canvas de autoría</title>
+  <style>
+    /*
+      Secciones gobernantes:
+      DESIGN.md — preview-theme: dark; Brand & Style; Colors > Transparencia semántica;
+      Layout & Spacing; Elevation & Depth; Components: Window Header, Tool Window Stripe,
+      Glass Shell, Top Bar, Context Panel, Canvas Toolbar y Resource Card
+      EXPERIENCE.md — Information Architecture > Arquitectura del Canvas y Profundidad del Recurso
+      EXPERIENCE.md — Component Patterns: Top Bar, Resource Row/Card, Add Menu, Group Frame,
+      Semantic Relation, Context Panel, AI Guidance Card, Save Status y Canvas Toolbar
+      EXPERIENCE.md — State Patterns: Guardado, Error de guardado/offline
+      EXPERIENCE.md — Key Flows: Flow 1 (pasos 6–8), Flow 2 (pasos 2–4), Flow 3 (pasos 1–5)
+    */
+    :root{--background:#FFFFFF;--foreground:#37352F;--muted:#666663;--surface:#F7F7F5;--raised:#FFFFFF;--contextual:#FFFFFFE8;--contextual-strong:#FFFFFFF5;--hover:#37352F0A;--active:#37352F14;--border:#37352F29;--border-strong:#37352F73;--control:#666663;--primary:#2383E2;--primary-strong:#1668A9;--selection:#2383E21F;--relation:#2383E2;--ai:#9065B0;--error:#C9372C;--success:#0F7B6C;--doc:#787774;--note:#DFAB01;--link:#2383E2;--float:0 4px 16px #0000001F}
+    *{box-sizing:border-box} body{margin:0;background:#ECECE9;color:var(--foreground);font-family:'JetBrains Sans',Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45}
+    button,input{font:inherit;color:inherit} button{min-height:36px;border:1px solid var(--control);border-radius:6px;background:var(--raised);padding:0 12px;font-weight:600} button.primary{background:var(--primary-strong);border-color:var(--primary-strong);color:#fff}.icon-button{width:36px;padding:0;font-size:17px}.muted{color:var(--muted)}.caption{font-size:12px;color:var(--muted)}
+    .page{padding:24px}.caption-block{max-width:1360px;margin:0 auto 12px}.caption-block h1{margin:0 0 2px;font-size:18px}.caption-block p{margin:0;color:var(--muted)}
+    .browser{width:min(1360px,100%);height:790px;margin:auto;background:var(--background);border:1px solid #C9C9C5;border-radius:8px;box-shadow:0 12px 32px #00000018;overflow:hidden}
+    .browser-chrome{height:34px;background:#E5E5E2;border-bottom:1px solid #C9C9C5;display:flex;align-items:center;padding:0 12px;gap:7px}.dot{width:10px;height:10px;border-radius:999px;background:#B8B8B4}.address{margin-left:14px;width:340px;height:20px;border-radius:5px;background:#F7F7F5;border:1px solid #D2D2CE;color:#777;padding:1px 10px;font-size:11px}
+    .app{height:calc(100% - 34px);display:grid;grid-template-rows:40px 1fr}.topbar{border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 8px;gap:8px;background:var(--background)}.breadcrumb{font-size:12px;color:var(--muted)}.diagram-title{font-weight:650}.top-spacer{flex:1}.save{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}.save:before{content:"";width:6px;height:6px;background:var(--success);border-radius:99px}.share{margin-left:4px}
+    .workspace{display:grid;grid-template-columns:224px minmax(520px,1fr) 304px;min-height:0}.library{background:var(--surface);border-right:1px solid var(--border);padding:12px 8px;overflow:hidden}.panel-title{font-size:14px;font-weight:650;margin:0 4px 8px}.search{height:36px;border:1px solid var(--control);border-radius:4px;background:#fff;padding:7px 8px;width:100%;margin-bottom:8px}.filters{display:flex;gap:4px;margin-bottom:8px}.chip{border:1px solid var(--border);border-radius:4px;background:var(--raised);padding:3px 7px;font-size:11px}.chip.on{background:var(--active);border-color:var(--border-strong)}.section-label{font-size:11px;font-weight:650;margin:12px 4px 5px}.resource-row{height:40px;display:grid;grid-template-columns:24px 1fr;align-items:center;gap:7px;padding:2px 4px;border-radius:4px}.resource-row.selected{background:var(--active)}.type-icon{width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:#fff;display:grid;place-items:center;font-weight:700;font-size:9px}.type-icon.pdf{border-left:3px solid var(--doc)}.type-icon.note{border-left:3px solid var(--note)}.type-icon.link{border-left:3px solid var(--link)}.row-title{font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row-meta{font-size:10px;color:var(--muted)}
+    .canvas{position:relative;overflow:hidden;background-color:var(--background);background-image:radial-gradient(#37352F20 1px,transparent 1px);background-size:20px 20px}.canvas-label{position:absolute;left:12px;top:10px;font-size:11px;color:var(--muted);background:var(--contextual);padding:3px 5px;border:1px solid var(--border);border-radius:4px;backdrop-filter:blur(10px)}.add-wrap{position:absolute;left:12px;top:38px}.add-menu{width:198px;margin-top:5px;border:1px solid var(--border);border-radius:6px;background:var(--raised);box-shadow:var(--float);padding:4px}.menu-title{padding:5px 7px;font-size:10px;font-weight:650;color:var(--muted)}.menu-item{height:30px;border-radius:4px;display:flex;align-items:center;gap:8px;padding:0 7px;font-size:12px}.menu-item.active{background:var(--active)}.menu-item span:first-child{width:17px;text-align:center}
+    .group{position:absolute;left:232px;top:124px;width:418px;height:298px;border:1px solid var(--border-strong);border-radius:6px;background:#37352F08}.group-label{position:absolute;top:100%;left:6px;padding-top:5px;font-size:11px;font-weight:650}.card{position:absolute;width:168px;min-height:98px;border:1px solid var(--border);border-radius:8px;background:var(--raised);padding:10px}.card.pdf{left:24px;top:38px;border-left:3px solid var(--doc)}.card.note{right:20px;bottom:40px;border-left:3px solid var(--note)}.card .kind{font-size:10px;color:var(--muted);margin-bottom:8px}.card .title{font-weight:650;margin-bottom:5px}.card .meta{font-size:10px;color:var(--muted)}.relation-line{position:absolute;left:188px;top:140px;width:92px;height:2px;background:var(--relation);transform:rotate(23deg);transform-origin:left}.relation-line:after{content:"";position:absolute;right:-2px;top:-4px;border-left:7px solid var(--relation);border-top:5px solid transparent;border-bottom:5px solid transparent}.relation-label{position:absolute;left:195px;top:151px;background:#fff;border:1px solid var(--border);border-radius:999px;padding:1px 6px;font-size:10px}
+    .loose-card{position:absolute;left:76px;bottom:82px;width:182px;border:1px solid var(--border);border-left:3px solid var(--link);border-radius:8px;background:#fff;padding:10px}.annotation{position:absolute;right:32px;top:58px;font-size:12px;color:var(--muted);transform:rotate(-2deg);border-bottom:1px dashed var(--border-strong);padding:3px}.ai-signal{position:absolute;right:16px;bottom:68px;border:1px solid var(--border);border-left:3px solid var(--ai);border-radius:6px;background:var(--contextual-strong);padding:7px 9px;font-size:11px;box-shadow:var(--float);backdrop-filter:blur(10px)}
+    .toolbar{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;border:1px solid var(--border);border-radius:6px;background:var(--contextual);box-shadow:0 2px 8px #00000014;overflow:hidden;backdrop-filter:blur(10px)}.toolbar button{border:0;border-right:1px solid var(--border);border-radius:0;min-width:36px;padding:0 7px;background:transparent}.toolbar button:last-child{border-right:0}
+    .context{border-left:1px solid var(--border);background:var(--surface);padding:12px;overflow:hidden}.context-head{display:flex;align-items:start;justify-content:space-between;margin-bottom:10px}.context h2{font-size:16px;margin:0 0 2px}.section{border-top:1px solid var(--border);padding:11px 0}.section:first-of-type{border-top:0}.section h3{font-size:11px;margin:0 0 7px}.field{border:1px solid var(--control);border-radius:4px;padding:7px 8px;background:#fff;margin:5px 0 7px}.info{background:var(--raised);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:7px 2px;font-size:11px}.properties{display:grid;grid-template-columns:1fr auto;gap:6px;font-size:11px}.properties span:nth-child(odd){color:var(--muted)}.ai-card{border:1px solid var(--border);border-left:3px solid var(--ai);border-radius:6px;background:var(--contextual-strong);padding:8px;margin-top:9px;backdrop-filter:blur(10px)}.ai-card strong{display:block;font-size:11px;margin-bottom:3px}.ai-card p{font-size:10px;margin:0;color:var(--muted);background:var(--raised);padding:5px;border-radius:4px}
+    .alternate{width:min(1360px,100%);margin:10px auto 0;border:1px solid var(--border);border-radius:4px;background:var(--surface);padding:8px 12px;display:flex;align-items:center;gap:10px}.alternate .status-error{color:var(--error);font-size:12px;font-weight:650}.alternate p{margin:0;flex:1;font-size:12px}.alternate button{min-height:32px}
+    @supports not (backdrop-filter:blur(10px)){.canvas-label,.ai-signal,.toolbar,.ai-card{background:var(--raised)}}
+    @media(max-width:1000px){.workspace{grid-template-columns:210px 1fr}.context{display:none}.browser{height:720px}.page{padding:14px}}
+    /* Dark preview: Islands-style shell. Stable resources/forms remain opaque. */
+:root{--background:#1E1F22;--foreground:#DFE1E5;--muted:#9DA0A8;--surface:#2B2D30;--raised:#313338;--contextual:#2B2D30C7;--contextual-strong:#2B2D30E8;--hover:#FFFFFF0D;--active:#3574F033;--border:#393B40;--border-strong:#6F737A;--control:#6F737A;--primary:#3574F0;--primary-strong:#3264C8;--selection:#3574F03D;--relation:#6EA6FF;--ai:#9A6DD7;--error:#FF7369;--success:#4DAB9A;--doc:#B4B4B0;--note:#FFDC49;--link:#529CCA}
+    body{background:#151619;color:var(--foreground)}
+    .browser{background:var(--background);border-color:var(--border);border-radius:10px;box-shadow:0 22px 70px #00000070}
+    .browser-chrome{height:40px;background:rgba(43,45,48,.84);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15);color:var(--foreground)}
+    .dot{background:#6F737A}.dot:first-child{background:#FF7369}.dot:nth-child(2){background:#FFB84D}.dot:nth-child(3){background:#4DAB9A}
+    .address{width:auto;flex:1;max-width:420px;background:rgba(30,31,34,.72);border-color:var(--border);color:var(--muted);text-align:center}
+    .app{height:calc(100% - 40px)}
+    .topbar{background:rgba(43,45,48,.84);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15)}
+button{background:var(--surface);border-color:var(--control);color:var(--foreground)}button.primary{background:var(--primary-strong);border-color:var(--primary-strong);color:#fff}
+    .workspace{grid-template-columns:40px 224px minmax(480px,1fr) 304px 40px;background:var(--background)}
+    .tool-stripe{background:rgba(43,45,48,.84);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15);display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:4px;color:var(--muted)}
+    .tool-stripe.left{border-right:1px solid var(--border)}.tool-stripe.right{border-left:1px solid var(--border)}
+    .tool-stripe button{width:32px;height:32px;min-height:32px;padding:0;border:0;background:transparent;color:var(--muted);border-radius:4px}.tool-stripe button.active{background:var(--active);color:var(--foreground);box-shadow:inset 2px 0 0 var(--primary)}
+    .library,.context{background:var(--surface);border-color:var(--border)}.panel-title{color:var(--foreground)}
+    .search,.field{background:var(--background);border-color:var(--control);color:var(--foreground)}.chip{background:var(--raised);border-color:var(--border)}.chip.on{background:var(--active);border-color:var(--primary)}
+    .resource-row.selected{background:var(--active)}.type-icon{background:var(--background);border-color:var(--border)}
+    .canvas{background-color:var(--background);background-image:radial-gradient(#6F737A55 1px,transparent 1px)}
+    .canvas-label,.ai-signal,.toolbar{background:rgba(43,45,48,.78);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15);color:var(--foreground)}
+    .add-menu{background:var(--raised);border-color:var(--border)}.menu-item.active{background:var(--active)}
+    .group{background:#3574F014;border-color:var(--border-strong)}
+    .card,.loose-card,.relation-label{background:var(--raised);border-color:var(--border);color:var(--foreground)}
+    .relation-line{background:var(--relation)}.relation-line:after{border-left-color:var(--relation)}
+    .toolbar button{background:transparent;color:var(--foreground);border-color:var(--border)}
+    .info{background:var(--background);border-color:var(--border)}.section{border-color:var(--border)}
+    .ai-card{background:rgba(43,45,48,.91);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15)}.ai-card p{background:var(--background);color:var(--muted)}
+    .alternate{background:var(--surface);border-color:var(--border)}
+    @supports not (backdrop-filter:blur(20px)){.browser-chrome,.topbar,.tool-stripe,.canvas-label,.ai-signal,.toolbar,.ai-card{background:var(--surface)}}
+    @media(max-width:1000px){.workspace{grid-template-columns:40px 210px 1fr 40px}.context{display:none}.tool-stripe.right{display:flex}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="caption-block"><h1>Canvas de autoría · Estudio de Juan 1</h1><p>Biblioteca contextual, conocimiento conectado y alcance global/local visible.</p></div>
+    <section class="browser" aria-label="Navegador con Canvas de Theke">
+      <div class="browser-chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div class="address">theke.app/proyectos/estudio-juan-1/grafo</div></div>
+      <div class="app">
+        <header class="topbar"><button class="icon-button" aria-label="Volver al proyecto">←</button><span class="breadcrumb">Proyectos / Estudio de Juan 1 /</span><span class="diagram-title">Prólogo y creación</span><span class="top-spacer"></span><span class="save">Guardado</span><button>Vista previa</button><button class="primary share">Compartir</button></header>
+        <div class="workspace">
+          <nav class="tool-stripe left" aria-label="Herramientas principales"><button aria-label="Proyectos">⌂</button><button class="active" aria-label="Biblioteca">▤</button><button aria-label="Buscar">⌕</button><button aria-label="Vista semántica">☷</button></nav>
+          <aside class="library" aria-label="Biblioteca contextual">
+            <div class="panel-title">Biblioteca</div><input class="search" aria-label="Buscar recursos" value="Juan" readonly>
+            <div class="filters"><span class="chip on">Todos</span><span class="chip">PDF</span><span class="chip">Notas</span></div>
+            <div class="section-label">Carpeta · Evangelio de Juan <span class="muted">6</span></div>
+            <div class="resource-row selected"><span class="type-icon pdf">PDF</span><span><div class="row-title">Comentario a Juan 1</div><div class="row-meta">PDF · 42 páginas</div></span></div>
+            <div class="resource-row"><span class="type-icon note">N</span><span><div class="row-title">Logos y creación</div><div class="row-meta">Nota · editada hoy</div></span></div>
+            <div class="resource-row"><span class="type-icon link">↗</span><span><div class="row-title">Texto griego de Juan 1</div><div class="row-meta">Enlace · biblehub.com</div></span></div>
+            <div class="section-label">Usados en este Diagrama <span class="muted">4</span></div>
+            <div class="resource-row"><span class="type-icon pdf">PDF</span><span><div class="row-title">Biblia de estudio</div><div class="row-meta">PDF · Biblioteca global</div></span></div>
+          </aside>
+          <section class="canvas" aria-label="Canvas de grafo">
+            <div class="canvas-label">4 Recursos · 2 Relaciones · 1 Grupo</div>
+            <div class="add-wrap"><button class="primary">＋ Añadir</button><div class="add-menu" role="menu" aria-label="Añadir al Canvas"><div class="menu-title">AÑADIR AL CANVAS</div><div class="menu-item active"><span>▣</span>Desde la Biblioteca</div><div class="menu-item"><span>↑</span>Subir recursos</div><div class="menu-item"><span>N</span>Crear una nota</div><div class="menu-item"><span>▰</span>Carpeta</div><div class="menu-item"><span>□</span>Grupo</div><div class="menu-item"><span>✎</span>Anotaciones</div></div></div>
+            <div class="annotation">Idea central: el Logos participa en la creación</div>
+            <div class="group"><div class="card pdf"><div class="kind">▤ PDF</div><div class="title">Comentario a Juan 1</div><div class="meta">Juan 1:1–5 · 42 páginas</div></div><div class="relation-line"></div><div class="relation-label">sustenta</div><div class="card note"><div class="kind">▧ NOTA</div><div class="title">Logos y creación</div><div class="meta">“Todas las cosas por él fueron hechas…”</div></div><div class="group-label">Creación y Logos · 2 recursos</div></div>
+            <div class="loose-card"><div class="caption">↗ ENLACE</div><strong>Texto griego de Juan 1</strong><div class="caption">Referencia léxica</div></div>
+            <div class="ai-signal"><span style="color:var(--ai);font-weight:700">◇ IA</span> · Hay una carencia que puedes revisar</div>
+            <div class="toolbar" aria-label="Herramientas de Canvas"><button aria-label="Alejar">−</button><button>78%</button><button aria-label="Acercar">＋</button><button>Encuadrar</button></div>
+          </section>
+          <aside class="context" aria-label="Panel de contexto">
+            <div class="context-head"><div><h2>Logos y creación</h2><div class="caption">Nota · Biblioteca global</div></div><button class="icon-button" aria-label="Cerrar panel">×</button></div>
+            <section class="section"><h3>CONTENIDO CANÓNICO</h3><div class="field">Todas las cosas por él fueron hechas; sin él, nada de lo creado llegó a existir.</div><div class="info">Se usa en 2 diagramas. <u>Revisar usos</u></div></section>
+            <section class="section"><h3>EN ESTE DIAGRAMA</h3><div class="properties"><span>Vista</span><b>Compacta</b><span>Color</span><b>Nota</b><span>Grupo</span><b>Creación y Logos</b></div></section>
+            <section class="section"><h3>RELACIÓN SELECCIONADA</h3><div class="properties"><span>Tipo</span><b>sustenta</b><span>Dirección</span><b>Hacia la nota</b></div><div class="ai-card"><strong>◇ Orientación disponible</strong><p>Puedes pedir evidencia adicional. Se analizarán solo estos dos Recursos.</p></div></section>
+          </aside>
+          <nav class="tool-stripe right" aria-label="Herramientas de contexto"><button class="active" aria-label="Inspector">ⓘ</button><button aria-label="Orientación de IA">◇</button><button aria-label="Comentarios">◌</button></nav>
+        </div>
+      </div>
+    </section>
+    <section class="alternate" aria-label="Estado alterno de error de guardado"><span class="status-error">No se pudo guardar.</span><p>Tus cambios siguen aquí. La edición manual y el Canvas permanecen disponibles.</p><button>Reintentar</button></section>
+  </main>
+</body>
+</html>

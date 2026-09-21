@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theke — Publicar diagrama</title>
+  <style>
+    /*
+      Secciones gobernantes:
+      DESIGN.md — preview-theme: dark; Colors > Transparencia semántica; Layout & Spacing;
+      Elevation & Depth; Components: Window Header, Tool Window Stripe, Glass Shell,
+      Share Wizard, Button,
+      Resource Row, State Message y Confirm Dialog
+      EXPERIENCE.md — Component Patterns: Share Wizard; Accessibility Floor: alternativas multimedia
+      EXPERIENCE.md — State Patterns: Compartido no publicado y Compartido publicado
+      EXPERIENCE.md — Key Flows: Flow 4 (pasos 1–5 y fallo), Flow 8 (paso 4)
+      PRD — FR-32 Previsualización, FR-33 Enlace compartido, FR-34 Controles de publicación
+    */
+    :root{--background:#FFFFFF;--foreground:#37352F;--muted:#666663;--surface:#F7F7F5;--raised:#FFFFFF;--active:#37352F14;--border:#37352F29;--control:#666663;--overlay:#00000066;--primary:#2383E2;--primary-strong:#1668A9;--primary-text:#1668A9;--focus:#2383E2;--success:#0F7B6C;--warning:#CB7B00;--error:#C9372C;--doc:#787774;--note:#DFAB01;--link:#2383E2;--shadow:0 8px 24px #0000001F}
+    *{box-sizing:border-box}body{margin:0;background:#E7E7E4;color:var(--foreground);font-family:'JetBrains Sans',Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.45}button,input{font:inherit;color:inherit}.page{padding:28px}.heading{width:min(1120px,100%);margin:0 auto 14px}.heading h1{font-size:18px;margin:0 0 3px}.heading p{margin:0;color:var(--muted)}
+    .browser{width:min(1120px,100%);height:720px;margin:auto;border:1px solid #C9C9C5;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 12px 32px #00000018}.chrome{height:34px;background:#E5E5E2;border-bottom:1px solid #C9C9C5;display:flex;align-items:center;gap:7px;padding:0 12px}.dot{width:10px;height:10px;border-radius:99px;background:#B8B8B4}.address{margin-left:14px;width:310px;height:20px;border:1px solid #D2D2CE;border-radius:4px;background:#f7f7f5;font-size:11px;color:#777;padding:1px 9px}.underlay{height:calc(100% - 34px);position:relative;background-color:#fff;background-image:radial-gradient(#37352F20 1px,transparent 1px);background-size:20px 20px}.underlay-top{height:40px;background:#fff;border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:8px}.underlay-card{position:absolute;border:1px solid var(--border);border-radius:8px;background:#fff;width:170px;padding:10px;opacity:.55}.u1{left:90px;top:170px}.u2{left:320px;top:300px}.overlay{position:absolute;inset:0;background:var(--overlay);display:grid;place-items:center;padding:20px}
+    .wizard{width:900px;max-width:100%;height:570px;background:var(--raised);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);display:grid;grid-template-rows:auto auto 1fr auto;overflow:hidden}.wizard-head{display:flex;align-items:start;padding:16px 20px 11px}.wizard-head h2{font-size:20px;line-height:1.25;margin:0 0 2px}.wizard-head p{margin:0;color:var(--muted);font-size:12px}.close{margin-left:auto;width:36px;height:36px;border:1px solid var(--control);border-radius:4px;background:#fff;font-size:19px}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:0 20px;background:var(--surface)}.step{height:46px;display:flex;align-items:center;gap:7px;color:var(--muted);position:relative;font-size:12px}.step:after{content:"";position:absolute;bottom:-1px;left:0;right:14px;height:2px;background:transparent}.step.current{color:var(--foreground);font-weight:650}.step.current:after{background:var(--primary)}.number{width:22px;height:22px;border:1px solid var(--control);border-radius:99px;display:grid;place-items:center;font-size:11px}.done .number{background:var(--success);color:#fff;border-color:var(--success)}.current .number{background:var(--primary-strong);color:#fff;border-color:var(--primary-strong)}
+    .content{display:grid;grid-template-columns:1.05fr .95fr;min-height:0}.exposure{padding:16px 20px;overflow:hidden}.exposure h3,.preview h3{font-size:16px;margin:0 0 3px}.sub{color:var(--muted);font-size:11px;margin-bottom:10px}.summary{display:flex;gap:18px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:7px 4px;margin-bottom:8px;font-size:11px}.summary strong{display:block;font-size:13px}.resource-list{border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.resource{height:50px;display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:8px;padding:0 8px;border-bottom:1px solid var(--border)}.resource:last-child{border-bottom:0}.check{width:17px;height:17px;border-radius:3px;background:var(--primary-strong);color:white;display:grid;place-items:center;font-size:10px}.resource-title{font-weight:600;font-size:12px}.resource-meta{font-size:10px;color:var(--muted)}.tag{font-size:10px;border-left:1px solid var(--border);padding-left:7px;color:var(--muted)}.note{margin-top:9px;border-left:3px solid var(--primary);background:var(--surface);padding:7px 9px;font-size:11px}
+    .preview{border-left:1px solid var(--border);background:var(--surface);padding:16px 18px}.preview-frame{height:270px;border:1px solid var(--border);border-radius:6px;background:#fff;position:relative;overflow:hidden;background-image:radial-gradient(#37352F1F 1px,transparent 1px);background-size:14px 14px}.mini-card{position:absolute;width:128px;border:1px solid var(--border);border-radius:6px;background:#fff;padding:8px;font-size:10px}.mini-card.a{left:28px;top:50px;border-left:3px solid var(--doc)}.mini-card.b{right:26px;bottom:54px;border-left:3px solid var(--note)}.mini-line{position:absolute;width:150px;height:2px;background:var(--primary);left:136px;top:130px;transform:rotate(20deg)}.viewer-bar{position:absolute;top:0;left:0;right:0;height:30px;border-bottom:1px solid var(--border);background:#fff;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:650}.preview-note{font-size:10px;color:var(--muted);margin-top:8px}.footer{border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;background:var(--surface)}.footer .status{font-size:11px;color:var(--muted)}.footer-spacer{flex:1}button{height:36px;border:1px solid var(--control);border-radius:4px;background:#fff;padding:0 12px;font-weight:650;margin-left:6px}button.primary{background:var(--primary-strong);border-color:var(--primary-strong);color:#fff}
+    .alternate{width:min(1120px,100%);margin:10px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px 12px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px}.alert-icon{width:24px;height:24px;border:2px solid var(--warning);border-radius:99px;display:grid;place-items:center;font-weight:700}.alternate strong{display:block;font-size:12px}.alternate span{font-size:11px;color:var(--muted)}.alternate button{height:34px}
+    @media(max-width:850px){.content{grid-template-columns:1fr}.preview{display:none}.wizard{height:auto}.browser{height:690px}.steps{padding:0 14px}.step{font-size:12px}.page{padding:14px}}
+    /* Dark preview: integrated IDE shell; publication content and form surfaces are opaque. */
+:root{--background:#1E1F22;--foreground:#DFE1E5;--muted:#9DA0A8;--surface:#2B2D30;--raised:#313338;--active:#3574F033;--border:#393B40;--control:#6F737A;--overlay:#00000099;--primary:#3574F0;--primary-strong:#3264C8;--primary-text:#6EA6FF;--focus:#4E8FFF;--success:#4DAB9A;--warning:#FFB84D;--error:#FF7369;--doc:#B4B4B0;--note:#FFDC49;--link:#529CCA}
+    body{background:#151619;color:var(--foreground)}.browser{background:var(--background);border-color:var(--border);border-radius:10px;box-shadow:0 22px 70px #00000070}
+    .chrome{height:40px;background:rgba(43,45,48,.84);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15)}
+    .dot{background:#6F737A}.dot:first-child{background:#FF7369}.dot:nth-child(2){background:#FFB84D}.dot:nth-child(3){background:#4DAB9A}.address{width:auto;flex:1;max-width:400px;background:rgba(30,31,34,.72);border-color:var(--border);color:var(--muted);text-align:center}
+    .underlay{height:calc(100% - 40px);background-color:var(--background);background-image:radial-gradient(#6F737A55 1px,transparent 1px)}.underlay-top{background:rgba(43,45,48,.84);border-color:var(--border);backdrop-filter:blur(20px) saturate(1.15);margin:0 40px}.underlay-card{background:var(--raised);border-color:var(--border);color:var(--foreground)}
+    .shell-stripe{position:absolute;top:0;bottom:0;width:40px;background:rgba(43,45,48,.84);backdrop-filter:blur(20px) saturate(1.15);display:flex;flex-direction:column;align-items:center;padding-top:7px;gap:5px;z-index:1}.shell-stripe.left{left:0;border-right:1px solid var(--border)}.shell-stripe.right{right:0;border-left:1px solid var(--border)}.shell-stripe span{width:30px;height:30px;display:grid;place-items:center;color:var(--muted);border-radius:4px}.shell-stripe span.on{background:var(--active);color:var(--foreground)}
+    .overlay{background:var(--overlay);z-index:2}.wizard{background:var(--raised);border-color:var(--border);box-shadow:0 20px 60px #00000080}.wizard-head{background:var(--raised)}.wizard-head p,.sub,.resource-meta,.preview-note,.footer .status{color:var(--muted)}
+.close,button{background:var(--surface);border-color:var(--control);color:var(--foreground)}button.primary{background:var(--primary-strong);border-color:var(--primary-strong);color:#fff}
+.steps,.footer,.preview{background:var(--surface);border-color:var(--border)}.step.current:after{background:var(--primary)}.current .number{background:var(--primary-strong);border-color:var(--primary-strong)}
+.exposure{background:var(--raised)}.summary,.resource-list,.resource,.note{border-color:var(--border)}.summary,.note{background:var(--background)}.check{background:var(--primary-strong)}.tag{border-color:var(--border)}
+    .preview-frame,.mini-card,.viewer-bar{background:var(--background);border-color:var(--border);color:var(--foreground)}.mini-line{background:#6EA6FF}
+    .alternate{background:var(--surface);border-color:var(--border)}
+    @supports not (backdrop-filter:blur(20px)){.chrome,.underlay-top,.shell-stripe{background:var(--surface)}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="heading"><h1>Publicación · Contenido expuesto</h1><p>Daniel revisa exactamente qué verá María antes de crear el enlace vivo.</p></div>
+    <section class="browser" aria-label="Flujo de publicación de Theke">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div class="address">theke.app/proyectos/estudio-juan-1/grafo</div></div>
+      <div class="underlay"><div class="shell-stripe left" aria-hidden="true"><span>⌂</span><span class="on">▤</span><span>⌕</span><span>☷</span></div><div class="shell-stripe right" aria-hidden="true"><span class="on">ⓘ</span><span>◇</span><span>◌</span></div><div class="underlay-top"><b>←</b><span>Estudio de Juan 1 / Prólogo y creación</span><span style="margin-left:auto;color:var(--muted);font-size:12px">Guardado</span></div><div class="underlay-card u1"><b>Comentario a Juan 1</b><br><span class="resource-meta">PDF · 42 páginas</span></div><div class="underlay-card u2"><b>Logos y creación</b><br><span class="resource-meta">Nota</span></div>
+        <div class="overlay">
+          <section class="wizard" role="dialog" aria-labelledby="publish-title">
+            <header class="wizard-head"><div><h2 id="publish-title">Publicar “Prólogo y creación”</h2><p>Revisa la vista, el contenido y el acceso antes de compartir.</p></div><button class="close" aria-label="Cerrar">×</button></header>
+            <nav class="steps" aria-label="Pasos de publicación"><div class="step done"><span class="number">✓</span><span>Vista previa</span></div><div class="step current" aria-current="step"><span class="number">2</span><span>Contenido expuesto</span></div><div class="step"><span class="number">3</span><span>Acceso</span></div></nav>
+            <div class="content">
+              <section class="exposure"><h3>Contenido expuesto</h3><div class="sub">Incluye solo los Recursos que deben abrirse desde este Compartido.</div>
+                <div class="summary"><div><strong>4</strong>Recursos visibles</div><div><strong>2</strong>Relaciones</div><div><strong>1</strong>Grupo visual</div></div>
+                <div class="resource-list" aria-label="Recursos que se publicarán">
+                  <div class="resource"><span class="check">✓</span><span><div class="resource-title">Comentario a Juan 1</div><div class="resource-meta">PDF · Vista previa disponible</div></span><span class="tag">Incluido</span></div>
+                  <div class="resource"><span class="check">✓</span><span><div class="resource-title">Logos y creación</div><div class="resource-meta">Nota · Contenido completo</div></span><span class="tag">Incluido</span></div>
+                  <div class="resource"><span class="check">✓</span><span><div class="resource-title">Texto griego de Juan 1</div><div class="resource-meta">Enlace · biblehub.com</div></span><span class="tag">Incluido</span></div>
+                  <div class="resource"><span class="check">✓</span><span><div class="resource-title">Lectura de Juan 1</div><div class="resource-meta">Audio · Transcripción disponible</div></span><span class="tag">Incluido</span></div>
+                </div>
+                <div class="note">Los Recursos privados que no aparecen aquí no expondrán nombres, metadatos ni referencias.</div>
+              </section>
+              <aside class="preview"><h3>Vista del visitante</h3><div class="sub">La composición queda fija; se puede navegar y abrir Recursos.</div><div class="preview-frame"><div class="viewer-bar">Prólogo y creación <span style="margin-left:auto;color:var(--muted)">Vista compartida</span></div><div class="mini-card a"><b>Comentario a Juan 1</b><br><span class="resource-meta">PDF</span></div><div class="mini-line"></div><div class="mini-card b"><b>Logos y creación</b><br><span class="resource-meta">Nota</span></div></div><div class="preview-note">Los cambios guardados también aparecerán en este enlace.</div></aside>
+            </div>
+            <footer class="footer"><span class="status">Paso 2 de 3 · Puedes volver sin perder opciones</span><span class="footer-spacer"></span><button>Atrás</button><button class="primary">Continuar a Acceso</button></footer>
+          </section>
+        </div>
+      </div>
+    </section>
+    <section class="alternate" aria-label="Estado alterno de recurso no publicable"><span class="alert-icon">!</span><span><strong>“Clase sobre el Logos.mp4” necesita subtítulos.</strong>Retíralo del contenido expuesto o añade la alternativa antes de publicarlo. El resto del Diagrama puede continuar.</span><button>Revisar recurso</button></section>
+  </main>
+</body>
+</html>

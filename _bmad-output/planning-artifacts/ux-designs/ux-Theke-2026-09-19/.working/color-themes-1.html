@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theke — exploración de temas de color</title>
+  <style>
+    /*
+      ROLES SEMÁNTICOS (todos los temas):
+      bg, canvas, surface, raised, text, muted, border, primary, on-primary,
+      relation, ai, selection, comment.
+
+      VARIACIÓN 1 — Archivo vivo
+      Light: bg #F1EFE8; canvas #F8F6EF; surface #FFFEFA; raised #E8EEE7;
+      text #26312B; muted #657169; border #CBD3CB; primary #2F6B52;
+      on-primary #FFFFFF; relation #397D76; ai #A66F18; selection #DCE9DF; comment #765B91.
+      Dark: bg #151A17; canvas #1A211D; surface #222A25; raised #29352E;
+      text #EDF4EF; muted #A8B5AC; border #405047; primary #76B995;
+      on-primary #102018; relation #74C2B7; ai #E2B35F; selection #304A3B; comment #BFA8D5.
+
+      VARIACIÓN 2 — Atlas nocturno
+      Light: bg #EEF2F8; canvas #F7F9FD; surface #FFFFFF; raised #E8EDFA;
+      text #17243B; muted #65718A; border #C9D3E6; primary #3456B2;
+      on-primary #FFFFFF; relation #146F8A; ai #6D4BC3; selection #DDE6FA; comment #A26A16.
+      Dark: bg #101624; canvas #151D2D; surface #1C2638; raised #232F46;
+      text #EFF4FF; muted #A6B2C9; border #394965; primary #86A2FF;
+      on-primary #11182A; relation #68C1D9; ai #BFA3FF; selection #293A61; comment #E8B560.
+
+      VARIACIÓN 3 — Tinta y ocre
+      Light: bg #EDEBE5; canvas #F5F2EA; surface #FFFCF4; raised #E5E0D4;
+      text #242522; muted #6B6B64; border #CFC9BA; primary #705B20;
+      on-primary #FFFDF7; relation #2D6E68; ai #4D6794; selection #E6DBB8; comment #715783.
+      Dark: bg #171816; canvas #1E1F1C; surface #282923; raised #313129;
+      text #F3F0E7; muted #B4B0A4; border #4D4B41; primary #D5B95E;
+      on-primary #25200E; relation #78B8AE; ai #91AAD5; selection #494326; comment #C3A5D1.
+
+      VARIACIÓN 4 — Estuario violeta
+      Light: bg #EDF4F2; canvas #F5FAF8; surface #FFFFFF; raised #E3EFED;
+      text #202B32; muted #65727A; border #C6D8D5; primary #694A86;
+      on-primary #FFFFFF; relation #16766F; ai #9A741C; selection #DFE4F1; comment #2E6F9B.
+      Dark: bg #111A1C; canvas #172225; surface #1E2B2E; raised #26363A;
+      text #EEF6F6; muted #A4B5B7; border #3A5054; primary #BD9ADC;
+      on-primary #201429; relation #67C5BC; ai #DDBC61; selection #3B3650; comment #7DB7DD.
+    */
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #111418; color: #eef2f5; font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    main { width: min(1600px, 100%); margin: 0 auto; padding: 36px; }
+    .page-head { margin-bottom: 30px; }
+    .page-head h1 { margin: 0 0 7px; font-size: 26px; letter-spacing: -.03em; }
+    .page-head p { margin: 0; color: #aab3bc; font-size: 14px; }
+    .theme { margin-bottom: 42px; padding: 24px; border: 1px solid #2c3239; border-radius: 18px; background: #181c21; }
+    .theme-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+    .theme-head h2 { margin: 0; font-size: 20px; }
+    .theme-head p { margin: 0; color: #aab3bc; font-size: 13px; }
+    .tokens { display: grid; grid-template-columns: repeat(7, minmax(110px, 1fr)); gap: 7px; margin-bottom: 18px; }
+    .token { min-width: 0; padding: 8px; border-radius: 8px; background: #21262d; border: 1px solid #303741; }
+    .token strong { display: block; margin-bottom: 4px; font-size: 10px; font-weight: 650; color: #d8dee6; }
+    .token span { display: block; font: 9px/1.35 ui-monospace, SFMono-Regular, Consolas, monospace; color: #9ba6b2; white-space: nowrap; }
+    .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .mode-label { position: absolute; top: 10px; right: 12px; z-index: 10; padding: 3px 7px; border-radius: 999px; background: var(--raised); color: var(--muted); border: 1px solid var(--border); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+    .preview { --shadow: 0 12px 32px rgba(0,0,0,.12); position: relative; height: 365px; overflow: hidden; border: 1px solid var(--border); border-radius: 13px; color: var(--text); background: var(--bg); }
+    .appbar { height: 42px; display: flex; align-items: center; gap: 9px; padding: 0 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+    .crumb { color: var(--muted); font-size: 10px; }
+    .appbar b { font-size: 11px; }
+    .publish { margin-left: auto; margin-right: 52px; padding: 5px 9px; color: var(--on-primary); background: var(--primary); border-radius: 6px; font-size: 9px; font-weight: 700; }
+    .workspace { display: grid; grid-template-columns: 118px 1fr 154px; height: calc(100% - 42px); }
+    .library { padding: 12px 9px; background: var(--surface); border-right: 1px solid var(--border); }
+    .side-title { margin-bottom: 9px; font-size: 9px; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .search { padding: 7px; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 9px; background: var(--canvas); }
+    .lib-item { display: flex; gap: 6px; align-items: center; margin-top: 8px; padding: 7px 5px; border-radius: 6px; font-size: 9px; }
+    .lib-item.active { background: var(--raised); }
+    .dot { width: 7px; height: 7px; border-radius: 2px; background: var(--primary); }
+    .canvas { position: relative; overflow: hidden; background-color: var(--canvas); background-image: radial-gradient(var(--border) .65px, transparent .65px); background-size: 14px 14px; }
+    .canvas-title { position: absolute; top: 13px; left: 15px; font-size: 11px; font-weight: 700; }
+    .canvas-sub { position: absolute; top: 29px; left: 15px; color: var(--muted); font-size: 8px; }
+    .node { position: absolute; z-index: 3; width: 118px; padding: 9px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); box-shadow: var(--shadow); }
+    .node.pdf { left: 28px; top: 92px; }
+    .node.note { right: 27px; top: 177px; width: 126px; }
+    .node-kicker { display: flex; align-items: center; gap: 5px; margin-bottom: 7px; color: var(--muted); font-size: 8px; text-transform: uppercase; letter-spacing: .05em; }
+    .file-icon { display: grid; place-items: center; width: 19px; height: 19px; border-radius: 5px; color: var(--on-primary); background: var(--primary); font-size: 8px; font-weight: 800; }
+    .node b { display: block; font-size: 10px; line-height: 1.25; }
+    .node p { margin: 5px 0 0; color: var(--muted); font-size: 8px; line-height: 1.35; }
+    .relation { position: absolute; z-index: 1; left: 132px; top: 169px; width: calc(100% - 243px); height: 2px; background: var(--relation); transform: rotate(17deg); transform-origin: left center; }
+    .relation::after { content: ""; position: absolute; right: -1px; top: -3px; border-left: 6px solid var(--relation); border-top: 4px solid transparent; border-bottom: 4px solid transparent; }
+    .rel-label { position: absolute; z-index: 4; left: 47%; top: 176px; padding: 4px 7px; border: 1px solid var(--border); border-radius: 999px; color: var(--relation); background: var(--surface); font-size: 8px; font-weight: 700; }
+    .ai-hint { position: absolute; z-index: 5; left: 37%; top: 218px; padding: 5px 7px; border: 1px solid var(--ai); border-radius: 7px; color: var(--ai); background: var(--surface); font-size: 8px; }
+    .inspector { padding: 12px 10px; border-left: 1px solid var(--border); background: var(--surface); }
+    .inspector h3 { margin: 0 0 4px; font-size: 11px; }
+    .inspector .meta { color: var(--muted); font-size: 8px; line-height: 1.4; }
+    .rule { height: 1px; margin: 10px 0; background: var(--border); }
+    .field { margin-top: 8px; }
+    .field label { display: block; margin-bottom: 4px; color: var(--muted); font-size: 8px; }
+    .field div { padding: 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--canvas); font-size: 8px; }
+    .ai-box { margin-top: 10px; padding: 8px; border-left: 2px solid var(--ai); border-radius: 5px; background: var(--raised); }
+    .ai-box b { color: var(--ai); font-size: 8px; }
+    .ai-box p { margin: 4px 0 0; color: var(--muted); font-size: 8px; line-height: 1.35; }
+
+    .archive.light { --bg:#F1EFE8;--canvas:#F8F6EF;--surface:#FFFEFA;--raised:#E8EEE7;--text:#26312B;--muted:#657169;--border:#CBD3CB;--primary:#2F6B52;--on-primary:#FFFFFF;--relation:#397D76;--ai:#A66F18;--selection:#DCE9DF;--comment:#765B91; }
+    .archive.dark { --bg:#151A17;--canvas:#1A211D;--surface:#222A25;--raised:#29352E;--text:#EDF4EF;--muted:#A8B5AC;--border:#405047;--primary:#76B995;--on-primary:#102018;--relation:#74C2B7;--ai:#E2B35F;--selection:#304A3B;--comment:#BFA8D5; }
+    .atlas.light { --bg:#EEF2F8;--canvas:#F7F9FD;--surface:#FFFFFF;--raised:#E8EDFA;--text:#17243B;--muted:#65718A;--border:#C9D3E6;--primary:#3456B2;--on-primary:#FFFFFF;--relation:#146F8A;--ai:#6D4BC3;--selection:#DDE6FA;--comment:#A26A16; }
+    .atlas.dark { --bg:#101624;--canvas:#151D2D;--surface:#1C2638;--raised:#232F46;--text:#EFF4FF;--muted:#A6B2C9;--border:#394965;--primary:#86A2FF;--on-primary:#11182A;--relation:#68C1D9;--ai:#BFA3FF;--selection:#293A61;--comment:#E8B560; }
+    .ink.light { --bg:#EDEBE5;--canvas:#F5F2EA;--surface:#FFFCF4;--raised:#E5E0D4;--text:#242522;--muted:#6B6B64;--border:#CFC9BA;--primary:#705B20;--on-primary:#FFFDF7;--relation:#2D6E68;--ai:#4D6794;--selection:#E6DBB8;--comment:#715783; }
+    .ink.dark { --bg:#171816;--canvas:#1E1F1C;--surface:#282923;--raised:#313129;--text:#F3F0E7;--muted:#B4B0A4;--border:#4D4B41;--primary:#D5B95E;--on-primary:#25200E;--relation:#78B8AE;--ai:#91AAD5;--selection:#494326;--comment:#C3A5D1; }
+    .estuary.light { --bg:#EDF4F2;--canvas:#F5FAF8;--surface:#FFFFFF;--raised:#E3EFED;--text:#202B32;--muted:#65727A;--border:#C6D8D5;--primary:#694A86;--on-primary:#FFFFFF;--relation:#16766F;--ai:#9A741C;--selection:#DFE4F1;--comment:#2E6F9B; }
+    .estuary.dark { --bg:#111A1C;--canvas:#172225;--surface:#1E2B2E;--raised:#26363A;--text:#EEF6F6;--muted:#A4B5B7;--border:#3A5054;--primary:#BD9ADC;--on-primary:#201429;--relation:#67C5BC;--ai:#DDBC61;--selection:#3B3650;--comment:#7DB7DD; }
+    @media (max-width: 1100px) { .tokens { grid-template-columns: repeat(4, 1fr); } .modes { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <header class="page-head"><h1>Theke · direcciones cromáticas</h1><p>El mismo fragmento de “Estudio de Juan 1” en cuatro registros, cada uno con modo claro y oscuro.</p></header>
+
+  <section class="theme">
+    <div class="theme-head"><h2>01 · Archivo vivo</h2><p>Sereno, orgánico y estudioso; evoca papel, archivo y crecimiento.</p></div>
+    <div class="tokens">
+      <div class="token"><strong>Fondo</strong><span>#F1EFE8 / #151A17</span></div><div class="token"><strong>Canvas</strong><span>#F8F6EF / #1A211D</span></div><div class="token"><strong>Superficie</strong><span>#FFFEFA / #222A25</span></div><div class="token"><strong>Elevada</strong><span>#E8EEE7 / #29352E</span></div><div class="token"><strong>Texto</strong><span>#26312B / #EDF4EF</span></div><div class="token"><strong>Texto tenue</strong><span>#657169 / #A8B5AC</span></div><div class="token"><strong>Borde</strong><span>#CBD3CB / #405047</span></div><div class="token"><strong>Primario</strong><span>#2F6B52 / #76B995</span></div><div class="token"><strong>Sobre primario</strong><span>#FFFFFF / #102018</span></div><div class="token"><strong>Relación</strong><span>#397D76 / #74C2B7</span></div><div class="token"><strong>IA</strong><span>#A66F18 / #E2B35F</span></div><div class="token"><strong>Selección</strong><span>#DCE9DF / #304A3B</span></div><div class="token"><strong>Comentario</strong><span>#765B91 / #BFA8D5</span></div>
+    </div>
+    <div class="modes">
+      <div class="preview archive light"><span class="mode-label">Claro</span><div class="appbar"><span class="crumb">Proyectos / Juan</span><b>Estudio de Juan 1</b><span class="publish">Compartir</span></div><div class="workspace"><aside class="library"><div class="side-title">Biblioteca</div><div class="search">Buscar recursos</div><div class="lib-item active"><span class="dot"></span> Comentario de Juan</div><div class="lib-item"><span class="dot"></span> Notas del prólogo</div></aside><div class="canvas"><div class="canvas-title">El prólogo</div><div class="canvas-sub">2 recursos · 1 relación</div><div class="node pdf"><div class="node-kicker"><span class="file-icon">PDF</span> Fuente</div><b>Comentario de Juan</b><p>Capítulo 1 · 24 páginas</p></div><div class="relation"></div><span class="rel-label">sustenta</span><div class="node note"><div class="node-kicker"><span class="file-icon">Aa</span> Nota</div><b>El Logos en Juan 1</b><p>La apertura conecta creación, vida y luz.</p></div><span class="ai-hint">✦ Hay evidencia relacionada</span></div><aside class="inspector"><div class="side-title">Detalle</div><h3>El Logos en Juan 1</h3><div class="meta">Nota canónica · usada en 2 diagramas</div><div class="rule"></div><div class="field"><label>Contenido canónico</label><div>La apertura conecta creación, vida y luz.</div></div><div class="ai-box"><b>✦ Guía de Theke</b><p>Revisa Juan 1:3 como respaldo adicional.</p></div></aside></div></div>
+      <div class="preview archive dark"><span class="mode-label">Oscuro</span><div class="appbar"><span class="crumb">Proyectos / Juan</span><b>Estudio de Juan 1</b><span class="publish">Compartir</span></div><div class="workspace"><aside class="library"><div class="side-title">Biblioteca</div><div class="search">Buscar recursos</div><div class="lib-item active"><span class="dot"></span> Comentario de Juan</div><div class="lib-item"><span class="dot"></span> Notas del prólogo</div></aside><div class="canvas"><div class="canvas-title">El prólogo</div><div class="canvas-sub">2 recursos · 1 relación</div><div class="node pdf"><div class="node-kicker"><span class="file-icon">PDF</span> Fuente</div><b>Comentario de Juan</b><p>Capítulo 1 · 24 páginas</p></div><div class="relation"></div><span class="rel-label">sustenta</span><div class="node note"><div class="node-kicker"><span class="file-icon">Aa</span> Nota</div><b>El Logos en Juan 1</b><p>La apertura conecta creación, vida y luz.</p></div><span class="ai-hint">✦ Hay evidencia relacionada</span></div><aside class="inspector"><div class="side-title">Detalle</div><h3>El Logos en Juan 1</h3><div class="meta">Nota canónica · usada en 2 diagramas</div><div class="rule"></div><div class="field"><label>Contenido canónico</label><div>La apertura conecta creación, vida y luz.</div></div><div class="ai-box"><b>✦ Guía de Theke</b><p>Revisa Juan 1:3 como respaldo adicional.</p></div></aside></div></div>
+    </div>
+  </section>
+
+  <section class="theme">
+    <div class="theme-head"><h2>02 · Atlas nocturno</h2><p>Preciso, cartográfico y contemporáneo; favorece redes complejas.</p></div>
+    <div class="tokens">
+      <div class="token"><strong>Fondo</strong><span>#EEF2F8 / #101624</span></div><div class="token"><strong>Canvas</strong><span>#F7F9FD / #151D2D</span></div><div class="token"><strong>Superficie</strong><span>#FFFFFF / #1C2638</span></div><div class="token"><strong>Elevada</strong><span>#E8EDFA / #232F46</span></div><div class="token"><strong>Texto</strong><span>#17243B / #EFF4FF</span></div><div class="token"><strong>Texto tenue</strong><span>#65718A / #A6B2C9</span></div><div class="token"><strong>Borde</strong><span>#C9D3E6 / #394965</span></div><div class="token"><strong>Primario</strong><span>#3456B2 / #86A2FF</span></div><div class="token"><strong>Sobre primario</strong><span>#FFFFFF / #11182A</span></div><div class="token"><strong>Relación</strong><span>#146F8A / #68C1D9</span></div><div class="token"><strong>IA</strong><span>#6D4BC3 / #BFA3FF</span></div><div class="token"><strong>Selección</strong><span>#DDE6FA / #293A61</span></div><div class="token"><strong>Comentario</strong><span>#A26A16 / #E8B560</span></div>
+    </div>
+    <div class="modes">
+      <div class="preview atlas light"><span class="mode-label">Claro</span><div class="appbar"><span class="crumb">Proyectos / Juan</span><b>Estudio de Juan 1</b><span class="publish">Compartir</span></div><div class="workspace"><aside class="library"><div class="side-title">Biblioteca</div><div class="search">Buscar recursos</div><div class="lib-item active"><span class="dot"></span> Comentario de Juan</div><div class="lib-item"><span class="dot"></span> Notas del prólogo</div></aside><div class="canvas"><div class="canvas-title">El prólogo</div><div class="canvas-sub">2 recursos · 1 relación</div><div class="node pdf"><div class="node-kicker"><span class="file-icon">PDF</span> Fuente</div><b>Comentario de Juan</b><p>Capítulo 1 · 24 páginas</p></div><div class="relation"></div><span class="rel-label">sustenta</span><div class="node note"><div class="node-kicker"><span class="file-icon">Aa</span> Nota</div><b>El Logos en Juan 1</b><p>La apertura conecta creación, vida y luz.</p></div><span class="ai-hint">✦ Hay evidencia relacionada</span></div><aside class="inspector"><div class="side-title">Detalle</div><h3>El Logos en Juan 1</h3><div class="meta">Nota canónica · usada en 2 diagramas</div><div class="rule"></div><div class="field"><label>Contenido canónico</label><div>La apertura conecta creación, vida y luz.</div></div><div class="ai-box"><b>✦ Guía de Theke</b><p>Revisa Juan 1:3 como respaldo adicional.</p></div></aside></div></div>
+      <div class="preview atlas dark"><span class="mode-label">Oscuro</span><div class="appbar"><span class="crumb">Proyectos / Juan</span><b>Estudio de Juan 1</b><span class="publish">Compartir</span></div><div class="workspace"><aside class="library"><div class="side-title">Biblioteca</div><div class="search">Buscar recursos</div><div class="lib-item active"><span class="dot"></span> Comentario de Juan</div><div class="lib-item"><span class="dot"></span> Notas del prólogo</div></aside><div class="canvas"><div class="canvas-title">El prólogo</div><div class="canvas-sub">2 recursos · 1 relación</div><div class="node pdf"><div class="node-kicker"><span class="file-icon">PDF</span> Fuente</div><b>Comentario de Juan</b><p>Capítulo 1 · 24 páginas</p></div><div class="relation"></div><span class="rel-label">sustenta</span><div class="node note"><div class="node-kicker"><span class="file-icon">Aa</span> Nota</div><b>El Logos en Juan 1</b><p>La apertura conecta creación, vida y luz.</p></div><span class="ai-hint">✦ Hay evidencia relacionada</span></div><aside class="inspector"><div class="side-title">Detalle</div><h3>El Logos en Juan 1</h3><div class="meta">Nota canónica · usada en 2 diagramas</div><div class="rule"></div><div class="field"><label>Contenido canónico</label><div>La apertura conecta creación, vida y luz.</div></div><div class="ai-box"><b>✦ Guía de Theke</b><p>Revisa Juan 1:3 como respaldo adicional.</p></div></aside></div></div>
+    </div>
+  </section>
+
+  <section class="theme">
+    <div class="theme-head"><h2>03 · Tinta y ocre</h2><p>Editorial, reflexivo y material; una mesa de estudio sin nostalgia.</p></div>
+    <div class="tokens">
+      <div class="token"><strong>Fondo</strong><span>#EDEBE5 / #171816</span></div><div class="token"><strong>Canvas</strong><span>#F5F2EA / #1E1F1C</span></div><div class="token"><strong>Superficie</strong><span>#FFFCF4 / #282923</span></div><div class="token"><strong>Elevada</strong><span>#E5E0D4 / #313129</span></div><div class="token"><strong>Texto</strong><span>#242522 / #F3F0E7</span></div><div class="token"><strong>Texto tenue</strong><span>#6B6B64 / #B4B0A4</span></div><div class="token"><strong>Borde</strong><span>#CFC9BA / #4D4B41</span></div><div class="token"><strong>Primario</strong><span>#705B20 / #D5B95E</span></div><div class="token"><strong>Sobre primario</strong><span>#FFFDF7 / #25200E</span></div><div class="token"><strong>Relación</strong><span>#2D6E68 / #78B8AE</span></div><div class="token"><strong>IA</strong><span>#4D6794 / #91AAD5</span></div><div class="token"><strong>Selección</strong><span>#E6DBB8 / #494326</span></div><div class="token"><strong>Comentario</strong><span>#715783 / #C3A5D1</span></div>
+    </div>
+    <div class="modes">
+      <div class="preview ink light"><span class="mode-label">Claro</span><div class="appbar"><span class="crumb">Proyectos / Juan</span><b>Estudio de Juan 1</b><span class="publish">Compartir</span></div><div class="workspace"><aside class="library"><div class="side-title">Biblioteca</div><div class="search">Buscar recursos</div><div class="lib-item active"><span class="dot"></span> Comentario de Juan</div><div class="lib-item"><span class="dot"></span> Notas del prólogo</div></aside><div class="canvas"><div class="canvas-title">El prólogo</div><div class="canvas-sub">2 recursos · 1 relación</div><div class="node pdf"><div class="node-kicker"><span class="file-icon">PDF</span> Fuente</div><b>Comentario de Juan</b><p>Capítulo 1 · 24 páginas</p></div><div class="relation"></div><span class="rel-label">sustenta</span><div class="node note"><div class="node-kicker"><span class="file-icon">Aa</span> Nota</div><b>El Logos en Juan 1</b><p>La apertura conecta creación, vida y luz.</p></div><span class="ai-hint">✦ Hay evidencia relacionada</span></div><aside class="inspector"><div class="side-title">Detalle</div><h3>El Logos en Juan 1</h3><div class="meta">Nota canónica · usada en 2 diagramas</div><div class="rule"></div><div class="field"><label>Contenido canónico</label><div>La apertura conecta creación, vida y luz.</div></div><div class="ai-box"><b>✦ Guía de Theke</b><p>Revisa Juan 1:3 como respaldo adicional.</p></div></aside></div></div>
+      <div class="preview ink dark"><span class="mode-label">Oscuro</span><div class="appbar"><span class="crumb">Proyectos / Juan</span><b>Estudio de Juan 1</b><span class="publish">Compartir</span></div><div class="workspace"><aside class="library"><div class="side-title">Biblioteca</div><div class="search">Buscar recursos</div><div class="lib-item active"><span class="dot"></span> Comentario de Juan</div><div class="lib-item"><span class="dot"></span> Notas del prólogo</div></aside><div class="canvas"><div class="canvas-title">El prólogo</div><div class="canvas-sub">2 recursos · 1 relación</div><div class="node pdf"><div class="node-kicker"><span class="file-icon">PDF</span> Fuente</div><b>Comentario de Juan</b><p>Capítulo 1 · 24 páginas</p></div><div class="relation"></div><span class="rel-label">sustenta</span><div class="node note"><div class="node-kicker"><span class="file-icon">Aa</span> Nota</div><b>El Logos en Juan 1</b><p>La apertura conecta creación, vida y luz.</p></div><span class="ai-hint">✦ Hay evidencia relacionada</span></div><aside class="inspector"><div class="side-title">Detalle</div><h3>El Logos en Juan 1</h3><div class="meta">Nota canónica · usada en 2 diagramas</div><div class="rule"></div><div class="field"><label>Contenido canónico</label><div>La apertura conecta creación, vida y luz.</div></div><div class="ai-box"><b>✦ Guía de Theke</b><p>Revisa Juan 1:3 como respaldo adicional.</p></div></aside></div></div>
+    </div>
+  </section>
+
+  <section class="theme">
+    <div class="theme-head"><h2>04 · Estuario violeta</h2><p>Exploratorio, creativo y confiable; separa guía y conocimiento con claridad.</p></div>
+    <div class="tokens">
+      <div class="token"><strong>Fondo</strong><span>#EDF4F2 / #111A1C</span></div><div class="token"><strong>Canvas</strong><span>#F5FAF8 / #172225</span></div><div class="token"><strong>Superficie</strong><span>#FFFFFF / #1E2B2E</span></div><div class="token"><strong>Elevada</strong><span>#E3EFED / #26363A</span></div><div class="token"><strong>Texto</strong><span>#202B32 / #EEF6F6</span></div><div class="token"><strong>Texto tenue</strong><span>#65727A / #A4B5B7</span></div><div class="token"><strong>Borde</strong><span>#C6D8D5 / #3A5054</span></div><div class="token"><strong>Primario</strong><span>#694A86 / #BD9ADC</span></div><div class="token"><strong>Sobre primario</strong><span>#FFFFFF / #201429</span></div><div class="token"><strong>Relación</strong><span>#16766F / #67C5BC</span></div><div class="token"><strong>IA</strong><span>#9A741C / #DDBC61</span></div><div class="token"><strong>Selección</strong><span>#DFE4F1 / #3B3650</span></div><div class="token"><strong>Comentario</strong><span>#2E6F9B / #7DB7DD</span></div>
+    </div>
+    <div class="modes">
+      <div class="preview estuary light"><span class="mode-label">Claro</span><div class="appbar"><span class="crumb">Proyectos / Juan</span><b>Estudio de Juan 1</b><span class="publish">Compartir</span></div><div class="workspace"><aside class="library"><div class="side-title">Biblioteca</div><div class="search">Buscar recursos</div><div class="lib-item active"><span class="dot"></span> Comentario de Juan</div><div class="lib-item"><span class="dot"></span> Notas del prólogo</div></aside><div class="canvas"><div class="canvas-title">El prólogo</div><div class="canvas-sub">2 recursos · 1 relación</div><div class="node pdf"><div class="node-kicker"><span class="file-icon">PDF</span> Fuente</div><b>Comentario de Juan</b><p>Capítulo 1 · 24 páginas</p></div><div class="relation"></div><span class="rel-label">sustenta</span><div class="node note"><div class="node-kicker"><span class="file-icon">Aa</span> Nota</div><b>El Logos en Juan 1</b><p>La apertura conecta creación, vida y luz.</p></div><span class="ai-hint">✦ Hay evidencia relacionada</span></div><aside class="inspector"><div class="side-title">Detalle</div><h3>El Logos en Juan 1</h3><div class="meta">Nota canónica · usada en 2 diagramas</div><div class="rule"></div><div class="field"><label>Contenido canónico</label><div>La apertura conecta creación, vida y luz.</div></div><div class="ai-box"><b>✦ Guía de Theke</b><p>Revisa Juan 1:3 como respaldo adicional.</p></div></aside></div></div>
+      <div class="preview estuary dark"><span class="mode-label">Oscuro</span><div class="appbar"><span class="crumb">Proyectos / Juan</span><b>Estudio de Juan 1</b><span class="publish">Compartir</span></div><div class="workspace"><aside class="library"><div class="side-title">Biblioteca</div><div class="search">Buscar recursos</div><div class="lib-item active"><span class="dot"></span> Comentario de Juan</div><div class="lib-item"><span class="dot"></span> Notas del prólogo</div></aside><div class="canvas"><div class="canvas-title">El prólogo</div><div class="canvas-sub">2 recursos · 1 relación</div><div class="node pdf"><div class="node-kicker"><span class="file-icon">PDF</span> Fuente</div><b>Comentario de Juan</b><p>Capítulo 1 · 24 páginas</p></div><div class="relation"></div><span class="rel-label">sustenta</span><div class="node note"><div class="node-kicker"><span class="file-icon">Aa</span> Nota</div><b>El Logos en Juan 1</b><p>La apertura conecta creación, vida y luz.</p></div><span class="ai-hint">✦ Hay evidencia relacionada</span></div><aside class="inspector"><div class="side-title">Detalle</div><h3>El Logos en Juan 1</h3><div class="meta">Nota canónica · usada en 2 diagramas</div><div class="rule"></div><div class="field"><label>Contenido canónico</label><div>La apertura conecta creación, vida y luz.</div></div><div class="ai-box"><b>✦ Guía de Theke</b><p>Revisa Juan 1:3 como respaldo adicional.</p></div></aside></div></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>
