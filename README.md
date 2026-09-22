@@ -1,4 +1,16 @@
-# React + TypeScript + Vite
+# Theke Web
+
+SPA privada de Theke. Clerk resuelve la identidad; `theke-api` aprovisiona la cuenta local y es la única autoridad para datos persistentes.
+
+## Autenticación y desarrollo
+
+1. Copia `.env.example` a `.env.local` y configura Clerk con OTP por correo y Google.
+2. Configura `VITE_API_URL` con `theke-api` del mismo entorno.
+3. Ejecuta `npm install` y `npm run dev`.
+
+Las rutas principales son privadas. El guard no monta el shell hasta que Clerk y `GET /v1/me` terminan; al salir se vacía la caché remota. Verifica con `npm run lint`, `npm run build`, `npm test`, `npm run contracts:check` y `npm run test:e2e -- auth`.
+
+## Base Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

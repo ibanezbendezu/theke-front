@@ -6,11 +6,16 @@ import { Placeholder } from '../components/ui/Placeholder';
 import { Dashboard } from '../pages/Dashboard';
 import { Library } from '../pages/Library';
 import { Projects } from '../pages/Projects';
+import { AccessPage } from '../features/auth/AccessPage';
+import { PrivateRoute } from '../features/auth/PrivateRoute';
+import { RegisterPage } from '../features/auth/RegisterPage';
 
 export const router = createBrowserRouter([
+    { path: '/access', element: <AccessPage /> },
+    { path: '/register', element: <RegisterPage /> },
     {
         path: '/',
-        element: <AppLayout />,
+        element: <PrivateRoute><AppLayout /></PrivateRoute>,
         children: [
             {
                 index: true,
@@ -24,15 +29,12 @@ export const router = createBrowserRouter([
                 path: 'projects/*',
                 element: <Projects/>,
             },
-            {
-                path: 'explore',
-                element: <Placeholder title="Comunidad" />,
-            },
+            { path: 'account-error', element: <Placeholder title="No se pudo cargar la cuenta" /> },
         ],
     },
     {
         path: '/canvas',
-        element: <CanvasLayout />,
+        element: <PrivateRoute><CanvasLayout /></PrivateRoute>,
         children: [
             {
                 path: ':id',

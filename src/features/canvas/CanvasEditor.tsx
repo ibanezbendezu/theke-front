@@ -5,7 +5,10 @@ import {
     type NodeTypes,
     ReactFlowProvider,
     useReactFlow,
-    type Node as FlowNode
+    type Node as FlowNode,
+    type OnConnectStart,
+    type OnConnectEnd,
+    type OnNodeDrag
 } from '@xyflow/react';
 import {
     Type,
@@ -67,14 +70,14 @@ function CanvasCore() {
         setContextMenu({ isOpen: true, x: e.clientX, y: e.clientY, flowPosition: screenToFlowPosition({ x: e.clientX, y: e.clientY }) });
     }, [screenToFlowPosition]);
 
-    const onNodeDragStop = useCallback((_: any, node: FlowNode) => {
+    const onNodeDragStop: OnNodeDrag = useCallback((_, node: FlowNode) => {
         const intersections = getIntersectingNodes(node);
 
         // CORRECCIÓN: Buscamos contenedores de tipo 'container'
         const dropContainer = intersections.find(n => n.type === 'container');
 
         const getAbs = (n: FlowNode) => {
-            const nx = n as any;
+            const nx = n as FlowNode & { internals?: { positionAbsolute?: { x: number; y: number } }; positionAbsolute?: { x: number; y: number } };
             return {
                 x: nx.internals?.positionAbsolute?.x ?? nx.positionAbsolute?.x ?? n.position.x,
                 y: nx.internals?.positionAbsolute?.y ?? nx.positionAbsolute?.y ?? n.position.y
@@ -96,11 +99,11 @@ function CanvasCore() {
         }
     }, [getIntersectingNodes, setNodeParent]);
 
-    const onConnectStart = useCallback((_: any, { nodeId }: { nodeId: string | null }) => {
+    const onConnectStart: OnConnectStart = useCallback((_, { nodeId }) => {
         connectingNodeId.current = nodeId;
     }, []);
 
-    const onConnectEnd = useCallback((event: any) => {
+    const onConnectEnd: OnConnectEnd = useCallback((event) => {
         const target = event.target as Element;
         if (target.classList.contains('react-flow__pane') && connectingNodeId.current) {
             const { clientX, clientY } = 'touches' in event ? event.touches[0] : event;

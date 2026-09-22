@@ -1,6 +1,9 @@
-import { Menu, MoreHorizontal, Home, Folder, FileText, Globe } from 'lucide-react';
+import { Menu, Home, Folder, FileText, LogOut } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import React from 'react';
+import { useClerk } from '@clerk/clerk-react';
+import { useCurrentAccount } from '../../data/useCurrentAccount';
+import { clearPrivateCache } from '../../data/queryClient';
 
 interface TopbarProps {
     isSidebarOpen: boolean;
@@ -11,11 +14,12 @@ interface TopbarProps {
 const routeDictionary: Record<string, { name: string, icon: React.ElementType }> = {
     'library': { name: 'Biblioteca', icon: FileText },
     'projects': { name: 'Proyectos', icon: Folder },
-    'explore': { name: 'Explorar', icon: Globe },
 };
 
 export function Topbar({ isSidebarOpen, setIsOpen }: TopbarProps) {
     const location = useLocation();
+    const { signOut } = useClerk();
+    const account = useCurrentAccount();
 
     // Convertimos la URL "/library/conquistadores" en un array: ['library', 'conquistadores']
     const pathnames = location.pathname.split('/').filter((x) => x);
@@ -39,7 +43,7 @@ export function Topbar({ isSidebarOpen, setIsOpen }: TopbarProps) {
                     {/* El nodo raíz siempre fijo */}
                     <Link to="/" className="flex items-center gap-1.5 px-2 py-1 rounded-[4px] hover:bg-surface-variant cursor-pointer transition-colors max-w-[150px]">
                         <Home size={16} className="text-outline flex-shrink-0" />
-                        <span className="font-medium truncate">Aarón's Notion HQ</span>
+                        <span className="font-medium truncate">{account.data?.account.name ?? 'Espacio privado'}</span>
                     </Link>
 
                     {/* Mapeo dinámico del resto de la ruta */}
@@ -65,8 +69,11 @@ export function Topbar({ isSidebarOpen, setIsOpen }: TopbarProps) {
             </div>
 
             <div className="flex items-center gap-1 flex-shrink-0 text-outline">
-                <button className="p-1.5 rounded-[4px] hover:bg-surface-variant transition-colors" title="Options">
-                    <MoreHorizontal size={18} />
+                <span className="hidden sm:block max-w-48 truncate text-sm text-on-background">
+                    {account.data?.user.displayName ?? account.data?.user.email ?? 'Cuenta'}
+                </span>
+                <button className="p-2 rounded-[4px] hover:bg-surface-variant transition-colors focus-visible:outline-2 focus-visible:outline-primary" aria-label="Cerrar sesión" title="Cerrar sesión" onClick={async () => { clearPrivateCache(); await signOut({ redirectUrl: '/access' }); }}>
+                    <LogOut size={18} />
                 </button>
             </div>
         </header>

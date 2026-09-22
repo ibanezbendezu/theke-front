@@ -58,7 +58,8 @@ export function ThemeProvider({
     )
 }
 
-// Hook personalizado para usar el tema fácilmente en cualquier componente
+// El provider y su hook permanecen juntos para conservar la API pública existente.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
     const context = useContext(ThemeProviderContext)
     if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider")

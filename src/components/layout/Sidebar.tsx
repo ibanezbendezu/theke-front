@@ -1,10 +1,11 @@
 import React from 'react';
-import { LayoutGrid, FileText, Globe, Folder, ChevronsLeft } from 'lucide-react';
+import { LayoutGrid, FileText, Folder, ChevronsLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { ThemeToggle } from '../ui/ThemeToggle'; // <--- Importamos el botón del tema
+import { useCurrentAccount } from '../../data/useCurrentAccount';
 
 interface NavItemProps {
     to: string;
@@ -32,6 +33,7 @@ const NavItem = ({ to, icon: Icon, label }: NavItemProps) => {
 };
 
 export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (val: boolean) => void }) {
+    const account = useCurrentAccount();
     return (
         <aside
             className={cn(
@@ -49,14 +51,13 @@ export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (va
 
             {/* Selector de Espacio de Trabajo */}
             <div className="px-3 py-3 flex items-center gap-2 hover:bg-surface-variant cursor-pointer transition-colors mt-1">
-                <div className="w-5 h-5 rounded-[3px] bg-primary text-on-primary flex items-center justify-center text-[10px] font-bold">A</div>
-                <span className="text-[14px] font-semibold truncate text-on-background">Aarón's Notion</span>
+                <div className="w-5 h-5 rounded-[3px] bg-primary text-on-primary flex items-center justify-center text-[10px] font-bold" aria-hidden="true">T</div>
+                <span className="text-[14px] font-semibold truncate text-on-background">{account.data?.account.name ?? 'Theke'}</span>
             </div>
 
             {/* Acciones Rápidas */}
             <div className="px-2 mb-4 mt-2 space-y-1">
                 <div className="px-1 mb-2"><Input placeholder="Buscar..." className="h-7 text-xs bg-background shadow-sm" /></div>
-                <NavItem to="/explore" icon={Globe} label="Explorar" />
             </div>
 
             {/* Navegación Principal */}
