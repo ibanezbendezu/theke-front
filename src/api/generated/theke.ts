@@ -6,9 +6,13 @@
  */
 import type {
   BadRequestResponse,
+  ListNotesParams,
   ListProjectsParams,
   MeResponse,
   NotFoundResponse,
+  NoteInput,
+  NoteListResponse,
+  NoteResponse,
   ProjectInput,
   ProjectListResponse,
   ProjectResponse,
@@ -337,5 +341,192 @@ export const restoreProject = async (id: string, options?: Parameters<typeof the
     method: 'POST'
 
 
+  }
+);}
+
+
+
+export type listNotesResponse200 = {
+  data: NoteListResponse
+  status: 200
+}
+
+export type listNotesResponseSuccess = (listNotesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listNotesResponse = (listNotesResponseSuccess)
+
+export const getListNotesUrl = (params?: ListNotesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/notes?${stringifiedParams}` : `/v1/notes`
+}
+
+export const listNotes = async (params?: ListNotesParams, options?: Parameters<typeof thekeFetch>[1]): Promise<listNotesResponse> => {
+
+  return thekeFetch<listNotesResponse>(getListNotesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createNoteResponse201 = {
+  data: NoteResponse
+  status: 201
+}
+
+export type createNoteResponseSuccess = (createNoteResponse201) & {
+  headers: Headers;
+};
+;
+
+export type createNoteResponse = (createNoteResponseSuccess)
+
+export const getCreateNoteUrl = () => {
+
+
+
+
+  return `/v1/notes`
+}
+
+export const createNote = async (noteInput: NoteInput, options?: Parameters<typeof thekeFetch>[1]): Promise<createNoteResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<createNoteResponse>(getCreateNoteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(noteInput)
+  }
+);}
+
+
+
+export type getNoteResponse200 = {
+  data: NoteResponse
+  status: 200
+}
+
+export type getNoteResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getNoteResponseSuccess = (getNoteResponse200) & {
+  headers: Headers;
+};
+export type getNoteResponseError = (getNoteResponse404) & {
+  headers: Headers;
+};
+
+export type getNoteResponse = (getNoteResponseSuccess | getNoteResponseError)
+
+export const getGetNoteUrl = (id: string,) => {
+
+
+
+
+  return `/v1/notes/${id}`
+}
+
+export const getNote = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<getNoteResponse> => {
+
+  return thekeFetch<getNoteResponse>(getGetNoteUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type updateNoteResponse200 = {
+  data: NoteResponse
+  status: 200
+}
+
+export type updateNoteResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type updateNoteResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type updateNoteResponseSuccess = (updateNoteResponse200) & {
+  headers: Headers;
+};
+export type updateNoteResponseError = (updateNoteResponse400 | updateNoteResponse404) & {
+  headers: Headers;
+};
+
+export type updateNoteResponse = (updateNoteResponseSuccess | updateNoteResponseError)
+
+export const getUpdateNoteUrl = (id: string,) => {
+
+
+
+
+  return `/v1/notes/${id}`
+}
+
+export const updateNote = async (id: string,
+    noteInput: NoteInput, options?: Parameters<typeof thekeFetch>[1]): Promise<updateNoteResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<updateNoteResponse>(getUpdateNoteUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(noteInput)
   }
 );}
