@@ -6,6 +6,8 @@
  */
 import type {
   BadRequestResponse,
+  FolderInput,
+  FolderResponse,
   ListNotesParams,
   ListProjectsParams,
   MeResponse,
@@ -13,9 +15,12 @@ import type {
   NoteInput,
   NoteListResponse,
   NoteResponse,
+  OrganizationResponse,
   ProjectInput,
   ProjectListResponse,
+  ProjectResourceListResponse,
   ProjectResponse,
+  ResourcePlacementInput,
   UnauthorizedResponse
 } from './models';
 
@@ -528,5 +533,302 @@ return thekeFetch<updateNoteResponse>(getUpdateNoteUrl(id),
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(noteInput)
+  }
+);}
+
+
+
+export type getProjectOrganizationResponse200 = {
+  data: OrganizationResponse
+  status: 200
+}
+
+export type getProjectOrganizationResponseSuccess = (getProjectOrganizationResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getProjectOrganizationResponse = (getProjectOrganizationResponseSuccess)
+
+export const getGetProjectOrganizationUrl = (projectId: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/organization`
+}
+
+export const getProjectOrganization = async (projectId: string, options?: Parameters<typeof thekeFetch>[1]): Promise<getProjectOrganizationResponse> => {
+
+  return thekeFetch<getProjectOrganizationResponse>(getGetProjectOrganizationUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createFolderResponse201 = {
+  data: FolderResponse
+  status: 201
+}
+
+export type createFolderResponseSuccess = (createFolderResponse201) & {
+  headers: Headers;
+};
+;
+
+export type createFolderResponse = (createFolderResponseSuccess)
+
+export const getCreateFolderUrl = (projectId: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/folders`
+}
+
+export const createFolder = async (projectId: string,
+    folderInput: FolderInput, options?: Parameters<typeof thekeFetch>[1]): Promise<createFolderResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<createFolderResponse>(getCreateFolderUrl(projectId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(folderInput)
+  }
+);}
+
+
+
+export type updateFolderResponse200 = {
+  data: FolderResponse
+  status: 200
+}
+
+export type updateFolderResponseSuccess = (updateFolderResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateFolderResponse = (updateFolderResponseSuccess)
+
+export const getUpdateFolderUrl = (projectId: string,
+    id: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/folders/${id}`
+}
+
+export const updateFolder = async (projectId: string,
+    id: string,
+    folderInput: FolderInput, options?: Parameters<typeof thekeFetch>[1]): Promise<updateFolderResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<updateFolderResponse>(getUpdateFolderUrl(projectId,id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(folderInput)
+  }
+);}
+
+
+
+export type archiveFolderResponse201 = {
+  data: FolderResponse
+  status: 201
+}
+
+export type archiveFolderResponseSuccess = (archiveFolderResponse201) & {
+  headers: Headers;
+};
+;
+
+export type archiveFolderResponse = (archiveFolderResponseSuccess)
+
+export const getArchiveFolderUrl = (projectId: string,
+    id: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/folders/${id}/archive`
+}
+
+export const archiveFolder = async (projectId: string,
+    id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<archiveFolderResponse> => {
+
+  return thekeFetch<archiveFolderResponse>(getArchiveFolderUrl(projectId,id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type restoreFolderResponse201 = {
+  data: FolderResponse
+  status: 201
+}
+
+export type restoreFolderResponseSuccess = (restoreFolderResponse201) & {
+  headers: Headers;
+};
+;
+
+export type restoreFolderResponse = (restoreFolderResponseSuccess)
+
+export const getRestoreFolderUrl = (projectId: string,
+    id: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/folders/${id}/restore`
+}
+
+export const restoreFolder = async (projectId: string,
+    id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<restoreFolderResponse> => {
+
+  return thekeFetch<restoreFolderResponse>(getRestoreFolderUrl(projectId,id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type addProjectResourcesResponse201 = {
+  data: ProjectResourceListResponse
+  status: 201
+}
+
+export type addProjectResourcesResponseSuccess = (addProjectResourcesResponse201) & {
+  headers: Headers;
+};
+;
+
+export type addProjectResourcesResponse = (addProjectResourcesResponseSuccess)
+
+export const getAddProjectResourcesUrl = (projectId: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/resources`
+}
+
+export const addProjectResources = async (projectId: string,
+    resourcePlacementInput: ResourcePlacementInput, options?: Parameters<typeof thekeFetch>[1]): Promise<addProjectResourcesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<addProjectResourcesResponse>(getAddProjectResourcesUrl(projectId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(resourcePlacementInput)
+  }
+);}
+
+
+
+export type moveProjectResourcesResponse200 = {
+  data: ProjectResourceListResponse
+  status: 200
+}
+
+export type moveProjectResourcesResponseSuccess = (moveProjectResourcesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type moveProjectResourcesResponse = (moveProjectResourcesResponseSuccess)
+
+export const getMoveProjectResourcesUrl = (projectId: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/resources`
+}
+
+export const moveProjectResources = async (projectId: string,
+    resourcePlacementInput: ResourcePlacementInput, options?: Parameters<typeof thekeFetch>[1]): Promise<moveProjectResourcesResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<moveProjectResourcesResponse>(getMoveProjectResourcesUrl(projectId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(resourcePlacementInput)
   }
 );}

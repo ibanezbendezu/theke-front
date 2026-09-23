@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Archive, Folder, MoreHorizontal, RotateCcw } from 'lucide-react';
+import { Archive, FileText, Folder, MoreHorizontal, RotateCcw } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { ViewToolbar } from '../components/ui/ViewToolbar';
 import { type Project, useProject, useProjectActions, useProjects } from '../data/useProjects';
+import { useOrganization, useOrganizationActions } from '../data/useOrganization';
+import { useNotes } from '../data/useNotes';
 
 const MAX_NAME_LENGTH = 120;
 
@@ -43,7 +45,7 @@ export function Projects() {
     <Button onClick={() => navigate('/projects')}>← Proyectos</Button>
     {detail.isPending && <p role="status" className="mt-5 text-outline">Cargando proyecto…</p>}
     {detail.isError && <div role="alert" className="mt-5"><p className="text-red-600">No se pudo abrir el proyecto.</p><Button variant="outline" onClick={() => detail.refetch()}>Reintentar</Button></div>}
-    {detail.data && <><h1 className="mt-5 text-2xl font-semibold">{detail.data.name}</h1><p className="mt-2 text-outline">Proyecto listo para organizar recursos y diagramas.</p><Button className="mt-5" variant="outline" onClick={() => edit(detail.data)}>Renombrar</Button></>}
+    {detail.data && <><h1 className="mt-5 text-2xl font-semibold">{detail.data.name}</h1><Button className="mt-3" variant="outline" onClick={() => edit(detail.data)}>Renombrar</Button><ProjectWorkspace projectId={detail.data.id} /></>}
     {editing && <Editor name={name} setName={setName} error={error} busy={actions.rename.isPending} inputRef={inputRef} save={save} close={close} />}
   </section>;
 
@@ -79,4 +81,17 @@ function Actions({ project, status, rename, archive, restore }: { project: Proje
 
 function Editor({ name, setName, error, busy, inputRef, save, close }: { name: string; setName: (value: string) => void; error: string; busy: boolean; inputRef: React.RefObject<HTMLInputElement | null>; save: (event: FormEvent) => void; close: () => void }) {
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}><div role="dialog" aria-modal="true" aria-labelledby="project-editor-title" className="w-full max-w-md rounded-lg border border-border bg-background p-5 shadow-xl"><h2 id="project-editor-title" className="text-lg font-semibold">Nombre del proyecto</h2><form className="mt-4" onSubmit={save}><Input ref={inputRef} icon={undefined} value={name} maxLength={MAX_NAME_LENGTH + 1} aria-invalid={Boolean(error)} aria-describedby={error ? 'project-name-error' : undefined} onChange={event => setName(event.target.value)} />{error && <p id="project-name-error" role="alert" className="mt-2 text-sm text-red-600">{error}</p>}<div className="mt-5 flex justify-end gap-2"><Button type="button" onClick={close}>Cancelar</Button><Button type="submit" variant="primary" disabled={busy}>{busy ? 'Guardando…' : 'Guardar'}</Button></div></form></div></div>;
+}
+
+function ProjectWorkspace({ projectId }: { projectId: string }) {
+  const organization = useOrganization(projectId); const actions = useOrganizationActions(projectId); const library = useNotes(); const [folderName, setFolderName] = useState(''); const [showLibrary, setShowLibrary] = useState(false);
+  if (organization.isPending) return <p role="status" className="mt-6">Cargando organización…</p>;
+  if (organization.isError || !organization.data) return <p role="alert" className="mt-6 text-red-600">No se pudo cargar la organización.</p>;
+  const activeFolders = organization.data.folders.filter(folder => !folder.archivedAt); const archivedFolders = organization.data.folders.filter(folder => folder.archivedAt); const available = (library.data?.pages.flatMap(page => page.data) ?? []).filter(note => !organization.data.resources.some(item => item.resourceId === note.id));
+  return <div className="mt-6"><div className="flex flex-wrap gap-2"><input aria-label="Nombre de carpeta" className="rounded border border-border bg-background px-2" value={folderName} onChange={event => setFolderName(event.target.value)} /><Button variant="outline" onClick={async () => { if (folderName.trim()) { await actions.createFolder.mutateAsync(folderName); setFolderName(''); } }}>Crear carpeta</Button><Button variant="primary" onClick={() => setShowLibrary(value => !value)}>Añadir desde Biblioteca</Button></div>
+    {showLibrary && <section className="mt-4 rounded border border-border p-3" aria-label="Selector de Biblioteca">{available.length === 0 ? <p className="text-sm text-outline">No hay recursos disponibles.</p> : available.map(note => <div key={note.id} className="flex items-center justify-between py-2"><span>{note.title}</span><Button onClick={() => actions.addResources.mutate([note.id])}>Añadir</Button></div>)}</section>}
+    <h2 className="mt-7 font-semibold">Carpetas</h2>{activeFolders.length === 0 && <p className="text-sm text-outline">Los recursos están en la raíz.</p>}{activeFolders.map(folder => <div key={folder.id} className="mt-2 flex items-center gap-2"><Folder size={18}/><span className="flex-1">{folder.name}</span><Button onClick={() => { const value = window.prompt('Nuevo nombre', folder.name); if (value) actions.renameFolder.mutate({ id: folder.id, name: value }); }}>Renombrar</Button><Button onClick={() => actions.archiveFolder.mutate(folder.id)}>Archivar</Button></div>)}
+    <h2 className="mt-7 font-semibold">Recursos</h2>{organization.data.resources.length === 0 ? <p className="text-sm text-outline">Todavía no añadiste recursos.</p> : organization.data.resources.map(resource => <div key={resource.id} className="mt-2 flex items-center gap-3 border-b border-border py-2"><FileText size={18}/><span className="flex-1">{resource.title}</span><label className="text-sm">Ubicación <select className="ml-2 rounded border border-border bg-background p-1" value={resource.folderId ?? ''} onChange={event => actions.moveResources.mutate({ resourceIds: [resource.resourceId], folderId: event.target.value || null })}><option value="">Raíz</option>{activeFolders.map(folder => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></label></div>)}
+    {archivedFolders.length > 0 && <><h2 className="mt-7 font-semibold">Carpetas archivadas</h2>{archivedFolders.map(folder => <div key={folder.id} className="mt-2 flex items-center gap-2"><span className="flex-1">{folder.name}</span><Button onClick={() => actions.restoreFolder.mutate(folder.id)}>Restaurar</Button></div>)}</>}
+  </div>;
 }
