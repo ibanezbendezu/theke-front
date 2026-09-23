@@ -1,1 +1,1 @@
-export const safeDestination = (value: string | null) => value?.startsWith('/') && !value.startsWith('//') ? value : '/';
+export const safeDestination = (value: string | null) => value && /^\/(?![\\/])/.test(value) ? value : '/';

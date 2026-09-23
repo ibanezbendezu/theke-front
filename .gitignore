@@ -17,6 +17,8 @@ playwright-report
 *.tsbuildinfo
 .eslintcache
 .npm-cache
+.uv-cache/
+.uv-python/
 
 # Local environment and secrets
 .env
@@ -26,6 +28,8 @@ playwright-report
 
 # Personal BMAD configuration
 _bmad/config.user.toml
+_bmad/custom/*.user.toml
+_bmad/render/
 
 # Personal Codex configuration
 .codex/
@@ -43,3 +47,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+*.pem
+*.key
+*.p12
+*.pfx

@@ -5,8 +5,14 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
-  ApiErrorResponse,
-  MeResponse
+  BadRequestResponse,
+  ListProjectsParams,
+  MeResponse,
+  NotFoundResponse,
+  ProjectInput,
+  ProjectListResponse,
+  ProjectResponse,
+  UnauthorizedResponse
 } from './models';
 
 import { thekeFetch } from '../httpClient';
@@ -16,7 +22,7 @@ export type getMeResponse200 = {
 }
 
 export type getMeResponse401 = {
-  data: ApiErrorResponse
+  data: UnauthorizedResponse
   status: 401
 }
 
@@ -43,6 +49,292 @@ export const getMe = async ( options?: Parameters<typeof thekeFetch>[1]): Promis
   {
     ...options,
     method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listProjectsResponse200 = {
+  data: ProjectListResponse
+  status: 200
+}
+
+export type listProjectsResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type listProjectsResponseSuccess = (listProjectsResponse200) & {
+  headers: Headers;
+};
+export type listProjectsResponseError = (listProjectsResponse401) & {
+  headers: Headers;
+};
+
+export type listProjectsResponse = (listProjectsResponseSuccess | listProjectsResponseError)
+
+export const getListProjectsUrl = (params?: ListProjectsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/projects?${stringifiedParams}` : `/v1/projects`
+}
+
+export const listProjects = async (params?: ListProjectsParams, options?: Parameters<typeof thekeFetch>[1]): Promise<listProjectsResponse> => {
+
+  return thekeFetch<listProjectsResponse>(getListProjectsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createProjectResponse201 = {
+  data: ProjectResponse
+  status: 201
+}
+
+export type createProjectResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type createProjectResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type createProjectResponseSuccess = (createProjectResponse201) & {
+  headers: Headers;
+};
+export type createProjectResponseError = (createProjectResponse400 | createProjectResponse401) & {
+  headers: Headers;
+};
+
+export type createProjectResponse = (createProjectResponseSuccess | createProjectResponseError)
+
+export const getCreateProjectUrl = () => {
+
+
+
+
+  return `/v1/projects`
+}
+
+export const createProject = async (projectInput: ProjectInput, options?: Parameters<typeof thekeFetch>[1]): Promise<createProjectResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<createProjectResponse>(getCreateProjectUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(projectInput)
+  }
+);}
+
+
+
+export type getProjectResponse200 = {
+  data: ProjectResponse
+  status: 200
+}
+
+export type getProjectResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getProjectResponseSuccess = (getProjectResponse200) & {
+  headers: Headers;
+};
+export type getProjectResponseError = (getProjectResponse404) & {
+  headers: Headers;
+};
+
+export type getProjectResponse = (getProjectResponseSuccess | getProjectResponseError)
+
+export const getGetProjectUrl = (id: string,) => {
+
+
+
+
+  return `/v1/projects/${id}`
+}
+
+export const getProject = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<getProjectResponse> => {
+
+  return thekeFetch<getProjectResponse>(getGetProjectUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type renameProjectResponse200 = {
+  data: ProjectResponse
+  status: 200
+}
+
+export type renameProjectResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type renameProjectResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type renameProjectResponseSuccess = (renameProjectResponse200) & {
+  headers: Headers;
+};
+export type renameProjectResponseError = (renameProjectResponse400 | renameProjectResponse404) & {
+  headers: Headers;
+};
+
+export type renameProjectResponse = (renameProjectResponseSuccess | renameProjectResponseError)
+
+export const getRenameProjectUrl = (id: string,) => {
+
+
+
+
+  return `/v1/projects/${id}`
+}
+
+export const renameProject = async (id: string,
+    projectInput: ProjectInput, options?: Parameters<typeof thekeFetch>[1]): Promise<renameProjectResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<renameProjectResponse>(getRenameProjectUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(projectInput)
+  }
+);}
+
+
+
+export type archiveProjectResponse201 = {
+  data: ProjectResponse
+  status: 201
+}
+
+export type archiveProjectResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type archiveProjectResponseSuccess = (archiveProjectResponse201) & {
+  headers: Headers;
+};
+export type archiveProjectResponseError = (archiveProjectResponse404) & {
+  headers: Headers;
+};
+
+export type archiveProjectResponse = (archiveProjectResponseSuccess | archiveProjectResponseError)
+
+export const getArchiveProjectUrl = (id: string,) => {
+
+
+
+
+  return `/v1/projects/${id}/archive`
+}
+
+export const archiveProject = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<archiveProjectResponse> => {
+
+  return thekeFetch<archiveProjectResponse>(getArchiveProjectUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type restoreProjectResponse201 = {
+  data: ProjectResponse
+  status: 201
+}
+
+export type restoreProjectResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type restoreProjectResponseSuccess = (restoreProjectResponse201) & {
+  headers: Headers;
+};
+export type restoreProjectResponseError = (restoreProjectResponse404) & {
+  headers: Headers;
+};
+
+export type restoreProjectResponse = (restoreProjectResponseSuccess | restoreProjectResponseError)
+
+export const getRestoreProjectUrl = (id: string,) => {
+
+
+
+
+  return `/v1/projects/${id}/restore`
+}
+
+export const restoreProject = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<restoreProjectResponse> => {
+
+  return thekeFetch<restoreProjectResponse>(getRestoreProjectUrl(id),
+  {
+    ...options,
+    method: 'POST'
 
 
   }
