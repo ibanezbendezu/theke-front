@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
+  ApiErrorResponse,
   BadRequestResponse,
   FolderInput,
   FolderResponse,
@@ -21,7 +22,11 @@ import type {
   ProjectResourceListResponse,
   ProjectResponse,
   ResourcePlacementInput,
-  UnauthorizedResponse
+  UnauthorizedResponse,
+  UploadIntent,
+  UploadListResponse,
+  UploadPolicyResponse,
+  UploadResponse
 } from './models';
 
 import { thekeFetch } from '../httpClient';
@@ -830,5 +835,289 @@ return thekeFetch<moveProjectResourcesResponse>(getMoveProjectResourcesUrl(proje
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(resourcePlacementInput)
+  }
+);}
+
+
+
+export type getUploadPolicyResponse200 = {
+  data: UploadPolicyResponse
+  status: 200
+}
+
+export type getUploadPolicyResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type getUploadPolicyResponseSuccess = (getUploadPolicyResponse200) & {
+  headers: Headers;
+};
+export type getUploadPolicyResponseError = (getUploadPolicyResponse401) & {
+  headers: Headers;
+};
+
+export type getUploadPolicyResponse = (getUploadPolicyResponseSuccess | getUploadPolicyResponseError)
+
+export const getGetUploadPolicyUrl = () => {
+
+
+
+
+  return `/v1/uploads/policy`
+}
+
+export const getUploadPolicy = async ( options?: Parameters<typeof thekeFetch>[1]): Promise<getUploadPolicyResponse> => {
+
+  return thekeFetch<getUploadPolicyResponse>(getGetUploadPolicyUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listUploadsResponse200 = {
+  data: UploadListResponse
+  status: 200
+}
+
+export type listUploadsResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type listUploadsResponseSuccess = (listUploadsResponse200) & {
+  headers: Headers;
+};
+export type listUploadsResponseError = (listUploadsResponse401) & {
+  headers: Headers;
+};
+
+export type listUploadsResponse = (listUploadsResponseSuccess | listUploadsResponseError)
+
+export const getListUploadsUrl = () => {
+
+
+
+
+  return `/v1/uploads`
+}
+
+export const listUploads = async ( options?: Parameters<typeof thekeFetch>[1]): Promise<listUploadsResponse> => {
+
+  return thekeFetch<listUploadsResponse>(getListUploadsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createUploadResponse201 = {
+  data: UploadResponse
+  status: 201
+}
+
+export type createUploadResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type createUploadResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type createUploadResponseSuccess = (createUploadResponse201) & {
+  headers: Headers;
+};
+export type createUploadResponseError = (createUploadResponse400 | createUploadResponse401) & {
+  headers: Headers;
+};
+
+export type createUploadResponse = (createUploadResponseSuccess | createUploadResponseError)
+
+export const getCreateUploadUrl = () => {
+
+
+
+
+  return `/v1/uploads`
+}
+
+export const createUpload = async (uploadIntent: UploadIntent, options?: Parameters<typeof thekeFetch>[1]): Promise<createUploadResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<createUploadResponse>(getCreateUploadUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(uploadIntent)
+  }
+);}
+
+
+
+export type getUploadResponse200 = {
+  data: UploadResponse
+  status: 200
+}
+
+export type getUploadResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type getUploadResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getUploadResponseSuccess = (getUploadResponse200) & {
+  headers: Headers;
+};
+export type getUploadResponseError = (getUploadResponse401 | getUploadResponse404) & {
+  headers: Headers;
+};
+
+export type getUploadResponse = (getUploadResponseSuccess | getUploadResponseError)
+
+export const getGetUploadUrl = (id: string,) => {
+
+
+
+
+  return `/v1/uploads/${id}`
+}
+
+export const getUpload = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<getUploadResponse> => {
+
+  return thekeFetch<getUploadResponse>(getGetUploadUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type finalizeUploadResponse201 = {
+  data: UploadResponse
+  status: 201
+}
+
+export type finalizeUploadResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type finalizeUploadResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type finalizeUploadResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type finalizeUploadResponseSuccess = (finalizeUploadResponse201) & {
+  headers: Headers;
+};
+export type finalizeUploadResponseError = (finalizeUploadResponse400 | finalizeUploadResponse401 | finalizeUploadResponse404) & {
+  headers: Headers;
+};
+
+export type finalizeUploadResponse = (finalizeUploadResponseSuccess | finalizeUploadResponseError)
+
+export const getFinalizeUploadUrl = (id: string,) => {
+
+
+
+
+  return `/v1/uploads/${id}/finalize`
+}
+
+export const finalizeUpload = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<finalizeUploadResponse> => {
+
+  return thekeFetch<finalizeUploadResponse>(getFinalizeUploadUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type cancelUploadResponse201 = {
+  data: UploadResponse
+  status: 201
+}
+
+export type cancelUploadResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type cancelUploadResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type cancelUploadResponse409 = {
+  data: ApiErrorResponse
+  status: 409
+}
+
+export type cancelUploadResponseSuccess = (cancelUploadResponse201) & {
+  headers: Headers;
+};
+export type cancelUploadResponseError = (cancelUploadResponse401 | cancelUploadResponse404 | cancelUploadResponse409) & {
+  headers: Headers;
+};
+
+export type cancelUploadResponse = (cancelUploadResponseSuccess | cancelUploadResponseError)
+
+export const getCancelUploadUrl = (id: string,) => {
+
+
+
+
+  return `/v1/uploads/${id}/cancel`
+}
+
+export const cancelUpload = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<cancelUploadResponse> => {
+
+  return thekeFetch<cancelUploadResponse>(getCancelUploadUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
   }
 );}

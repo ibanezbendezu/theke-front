@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ViewToolbar } from '../components/ui/ViewToolbar';
 import { type Note, type NoteInput, useNote, useNoteActions, useNotes } from '../data/useNotes';
+import { UploadTray } from '../components/uploads/UploadTray';
 
 export function Library() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
@@ -19,6 +20,7 @@ export function Library() {
 
   return <main className="w-full px-6 md:px-8 py-6 pb-32" aria-labelledby="library-title">
     <div className="flex items-center justify-between"><div><h1 id="library-title" className="text-xl font-semibold">Biblioteca</h1><p className="text-sm text-outline">Recursos reutilizables en distintos proyectos y diagramas.</p></div><ViewToolbar viewMode={viewMode} setViewMode={setViewMode} onNew={() => setCreating(true)} /></div>
+    <UploadTray />
     {notes.isPending && <p role="status" className="mt-6">Cargando Biblioteca…</p>}
     {notes.isError && <div role="alert" className="mt-6"><p className="text-red-600">No se pudo cargar la Biblioteca.</p><Button variant="outline" onClick={() => notes.refetch()}>Reintentar</Button></div>}
     {!notes.isPending && !notes.isError && items.length === 0 && <section className="mt-8 rounded-lg border border-dashed border-border p-10 text-center"><FileText className="mx-auto text-outline" size={36}/><h2 className="mt-3 font-medium">Tu Biblioteca está vacía</h2><p className="mt-1 text-sm text-outline">Crea una nota y reutilízala después en distintos contextos.</p><Button className="mt-4" variant="primary" onClick={() => setCreating(true)}>Crear una nota</Button></section>}
