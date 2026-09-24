@@ -18,6 +18,7 @@ interface CanvasState {
     onEdgesChange: (changes: EdgeChange[]) => void;
     onConnect: (connection: Connection) => void;
     addNode: (node: FlowNode) => void;
+    loadDocument: (nodes: FlowNode[], edges: Edge[]) => void;
     updateEdgeData: (edgeId: string, newData: Record<string, unknown>) => void;
     // Función para manejar el agrupamiento
     setNodeParent: (nodeId: string, parentId: string | undefined, position: {x: number, y: number}) => void;
@@ -51,6 +52,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     addNode: (node) => {
         set({ nodes: [...get().nodes, node] });
     },
+
+    loadDocument: (nodes, edges) => set({ nodes, edges }),
 
     updateEdgeData: (edgeId, newData) => {
         set({

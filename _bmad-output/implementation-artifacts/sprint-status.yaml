@@ -37,8 +37,8 @@ development_status:
   1-9-archivar-o-eliminar-con-impacto-visible: review
   epic-1-retrospective: optional
 
-  epic-2: backlog
-  2-1-crear-y-administrar-diagramas-en-el-editor: backlog
+  epic-2: in-progress
+  2-1-crear-y-administrar-diagramas-en-el-editor: done
   2-2-guardar-y-recuperar-la-composición-del-canvas: backlog
   2-3-añadir-recursos-existentes-al-canvas: backlog
   2-4-cargar-archivos-directamente-sobre-el-canvas: backlog

@@ -8,6 +8,9 @@ import type {
   AccessibilityInput,
   ApiErrorResponse,
   BadRequestResponse,
+  DiagramInput,
+  DiagramListResponse,
+  DiagramResponse,
   FolderInput,
   FolderResponse,
   GetImpactParams,
@@ -16,6 +19,7 @@ import type {
   ImpactResponse,
   LinkInput,
   LinkUpdateInput,
+  ListDiagramsParams,
   ListNotesParams,
   ListProjectsParams,
   ListResourcesParams,
@@ -1304,6 +1308,310 @@ export const retryLinkMetadata = async (id: string, options?: Parameters<typeof 
 
 
 
+export type listDiagramsResponse200 = {
+  data: DiagramListResponse
+  status: 200
+}
+
+export type listDiagramsResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type listDiagramsResponseSuccess = (listDiagramsResponse200) & {
+  headers: Headers;
+};
+export type listDiagramsResponseError = (listDiagramsResponse404) & {
+  headers: Headers;
+};
+
+export type listDiagramsResponse = (listDiagramsResponseSuccess | listDiagramsResponseError)
+
+export const getListDiagramsUrl = (projectId: string,
+    params?: ListDiagramsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/projects/${projectId}/diagrams?${stringifiedParams}` : `/v1/projects/${projectId}/diagrams`
+}
+
+export const listDiagrams = async (projectId: string,
+    params?: ListDiagramsParams, options?: Parameters<typeof thekeFetch>[1]): Promise<listDiagramsResponse> => {
+
+  return thekeFetch<listDiagramsResponse>(getListDiagramsUrl(projectId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createDiagramResponse201 = {
+  data: DiagramResponse
+  status: 201
+}
+
+export type createDiagramResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type createDiagramResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type createDiagramResponseSuccess = (createDiagramResponse201) & {
+  headers: Headers;
+};
+export type createDiagramResponseError = (createDiagramResponse400 | createDiagramResponse404) & {
+  headers: Headers;
+};
+
+export type createDiagramResponse = (createDiagramResponseSuccess | createDiagramResponseError)
+
+export const getCreateDiagramUrl = (projectId: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/diagrams`
+}
+
+export const createDiagram = async (projectId: string,
+    diagramInput: DiagramInput, options?: Parameters<typeof thekeFetch>[1]): Promise<createDiagramResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<createDiagramResponse>(getCreateDiagramUrl(projectId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(diagramInput)
+  }
+);}
+
+
+
+export type getDiagramResponse200 = {
+  data: DiagramResponse
+  status: 200
+}
+
+export type getDiagramResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getDiagramResponseSuccess = (getDiagramResponse200) & {
+  headers: Headers;
+};
+export type getDiagramResponseError = (getDiagramResponse404) & {
+  headers: Headers;
+};
+
+export type getDiagramResponse = (getDiagramResponseSuccess | getDiagramResponseError)
+
+export const getGetDiagramUrl = (id: string,) => {
+
+
+
+
+  return `/v1/diagrams/${id}`
+}
+
+export const getDiagram = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<getDiagramResponse> => {
+
+  return thekeFetch<getDiagramResponse>(getGetDiagramUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type renameDiagramResponse200 = {
+  data: DiagramResponse
+  status: 200
+}
+
+export type renameDiagramResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type renameDiagramResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type renameDiagramResponseSuccess = (renameDiagramResponse200) & {
+  headers: Headers;
+};
+export type renameDiagramResponseError = (renameDiagramResponse400 | renameDiagramResponse404) & {
+  headers: Headers;
+};
+
+export type renameDiagramResponse = (renameDiagramResponseSuccess | renameDiagramResponseError)
+
+export const getRenameDiagramUrl = (id: string,) => {
+
+
+
+
+  return `/v1/diagrams/${id}`
+}
+
+export const renameDiagram = async (id: string,
+    diagramInput: DiagramInput, options?: Parameters<typeof thekeFetch>[1]): Promise<renameDiagramResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<renameDiagramResponse>(getRenameDiagramUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(diagramInput)
+  }
+);}
+
+
+
+export type duplicateDiagramResponse201 = {
+  data: DiagramResponse
+  status: 201
+}
+
+export type duplicateDiagramResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type duplicateDiagramResponseSuccess = (duplicateDiagramResponse201) & {
+  headers: Headers;
+};
+export type duplicateDiagramResponseError = (duplicateDiagramResponse404) & {
+  headers: Headers;
+};
+
+export type duplicateDiagramResponse = (duplicateDiagramResponseSuccess | duplicateDiagramResponseError)
+
+export const getDuplicateDiagramUrl = (id: string,) => {
+
+
+
+
+  return `/v1/diagrams/${id}/duplicates`
+}
+
+export const duplicateDiagram = async (id: string,
+    diagramInput?: DiagramInput, options?: Parameters<typeof thekeFetch>[1]): Promise<duplicateDiagramResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<duplicateDiagramResponse>(getDuplicateDiagramUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(diagramInput)
+  }
+);}
+
+
+
+export type restoreDiagramResponse201 = {
+  data: DiagramResponse
+  status: 201
+}
+
+export type restoreDiagramResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type restoreDiagramResponseSuccess = (restoreDiagramResponse201) & {
+  headers: Headers;
+};
+export type restoreDiagramResponseError = (restoreDiagramResponse404) & {
+  headers: Headers;
+};
+
+export type restoreDiagramResponse = (restoreDiagramResponseSuccess | restoreDiagramResponseError)
+
+export const getRestoreDiagramUrl = (id: string,) => {
+
+
+
+
+  return `/v1/diagrams/${id}/restore`
+}
+
+export const restoreDiagram = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<restoreDiagramResponse> => {
+
+  return thekeFetch<restoreDiagramResponse>(getRestoreDiagramUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
 export type getImpactResponse200 = {
   data: ImpactResponse
   status: 200
@@ -1328,7 +1636,7 @@ export type getImpactResponseError = (getImpactResponse400 | getImpactResponse40
 
 export type getImpactResponse = (getImpactResponseSuccess | getImpactResponseError)
 
-export const getGetImpactUrl = (entityType: 'resource' | 'project' | 'folder',
+export const getGetImpactUrl = (entityType: 'resource' | 'project' | 'folder' | 'diagram',
     id: string,
     params: GetImpactParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -1345,7 +1653,7 @@ export const getGetImpactUrl = (entityType: 'resource' | 'project' | 'folder',
   return stringifiedParams.length > 0 ? `/v1/impacts/${entityType}/${id}?${stringifiedParams}` : `/v1/impacts/${entityType}/${id}`
 }
 
-export const getImpact = async (entityType: 'resource' | 'project' | 'folder',
+export const getImpact = async (entityType: 'resource' | 'project' | 'folder' | 'diagram',
     id: string,
     params: GetImpactParams, options?: Parameters<typeof thekeFetch>[1]): Promise<getImpactResponse> => {
 
@@ -1389,7 +1697,7 @@ export type executeImpactActionResponseError = (executeImpactActionResponse400 |
 
 export type executeImpactActionResponse = (executeImpactActionResponseSuccess | executeImpactActionResponseError)
 
-export const getExecuteImpactActionUrl = (entityType: 'resource' | 'project' | 'folder',
+export const getExecuteImpactActionUrl = (entityType: 'resource' | 'project' | 'folder' | 'diagram',
     id: string,) => {
 
 
@@ -1398,7 +1706,7 @@ export const getExecuteImpactActionUrl = (entityType: 'resource' | 'project' | '
   return `/v1/impacts/${entityType}/${id}`
 }
 
-export const executeImpactAction = async (entityType: 'resource' | 'project' | 'folder',
+export const executeImpactAction = async (entityType: 'resource' | 'project' | 'folder' | 'diagram',
     id: string,
     impactConfirmationInput: ImpactConfirmationInput, options?: Parameters<typeof thekeFetch>[1]): Promise<executeImpactActionResponse> => {
 

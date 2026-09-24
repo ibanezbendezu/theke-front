@@ -12,4 +12,5 @@ export const ImpactEntityType = {
   resource: 'resource',
   project: 'project',
   folder: 'folder',
+  diagram: 'diagram',
 } as const;

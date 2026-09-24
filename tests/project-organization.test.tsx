@@ -6,6 +6,7 @@ import { Projects } from '../src/pages/Projects';
 const state = vi.hoisted(() => ({
   createFolder: vi.fn(),
   addResources: vi.fn(),
+  createDiagram: vi.fn(),
 }));
 
 vi.mock('../src/data/useProjects', () => ({
@@ -23,6 +24,10 @@ vi.mock('../src/data/useOrganization', () => ({
 vi.mock('../src/data/useNotes', () => ({
   useNotes: () => ({ data: { pages: [{ data: [{ id: 'note-1', title: 'Fuente útil' }] }] } }),
 }));
+vi.mock('../src/data/useDiagrams', () => ({
+  useDiagrams: () => ({ data: [], isPending: false, isError: false }),
+  useDiagramActions: () => ({ create: { mutateAsync: state.createDiagram, isPending: false }, rename: { mutate: vi.fn() }, duplicate: { mutate: vi.fn() }, restore: { mutate: vi.fn() } }),
+}));
 
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
@@ -39,5 +44,14 @@ describe('organización de un proyecto', () => {
     expect(screen.getByText('Fuente útil')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Añadir' }));
     expect(state.addResources).toHaveBeenCalledWith(['note-1']);
+  });
+  it('explica el lienzo vacío y crea un diagrama asociado', async () => {
+    state.createDiagram.mockResolvedValue({ id: 'diagram-1' });
+    render(<MemoryRouter initialEntries={['/projects/project-1']}><Projects /></MemoryRouter>);
+    expect(screen.getByText('Aún no hay diagramas')).toBeInTheDocument();
+    expect(screen.getByText(/nodos, grupos y enlaces/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Nombre del diagrama' }), { target: { value: 'Mapa de ideas' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear diagrama' }));
+    expect(state.createDiagram).toHaveBeenCalledWith('Mapa de ideas');
   });
 });

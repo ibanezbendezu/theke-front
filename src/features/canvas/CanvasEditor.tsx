@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ReactFlow,
     Background,
@@ -31,6 +31,7 @@ import { LinkNode } from "./nodes/LinkNode";
 import { DocumentNode } from './nodes/DocumentNode';
 import { AudioNode } from './nodes/AudioNode';
 import { GroupNode } from './nodes/GroupNode';
+import type { DiagramDocument } from '../../data/useDiagrams';
 
 const nodeTypes: NodeTypes = {
     media: MediaNode,
@@ -217,7 +218,9 @@ function CanvasCore() {
     );
 }
 
-export function CanvasEditor() {
+export function CanvasEditor({ document }: { document?: DiagramDocument }) {
+    const loadDocument = useCanvasStore(state => state.loadDocument);
+    useEffect(() => { if (document) loadDocument(document.nodes, document.edges); }, [document, loadDocument]);
     return (
         <div className="w-full h-full relative">
             <ReactFlowProvider>

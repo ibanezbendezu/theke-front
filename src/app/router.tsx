@@ -9,6 +9,7 @@ import { Projects } from '../pages/Projects';
 import { AccessPage } from '../features/auth/AccessPage';
 import { PrivateRoute } from '../features/auth/PrivateRoute';
 import { RegisterPage } from '../features/auth/RegisterPage';
+import { DiagramEditor } from '../pages/DiagramEditor';
 
 export const router = createBrowserRouter([
     { path: '/access', element: <AccessPage /> },
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
             { path: 'account-error', element: <Placeholder title="No se pudo cargar la cuenta" /> },
         ],
     },
+    { path: '/projects/:projectId/diagrams/:diagramId', element: <PrivateRoute><DiagramEditor /></PrivateRoute> },
     {
         path: '/canvas',
         element: <PrivateRoute><CanvasLayout /></PrivateRoute>,

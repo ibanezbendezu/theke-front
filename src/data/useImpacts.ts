@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { thekeFetch } from '../api/httpClient';
 
-export type ImpactEntityType = 'resource' | 'project' | 'folder';
+export type ImpactEntityType = 'resource' | 'project' | 'folder' | 'diagram';
 export type ImpactAction = 'archive' | 'delete';
 export interface Impact { entityType: ImpactEntityType; entityId: string; entityName: string; action: ImpactAction; state: string; affected: { projects: number; folders: number; resources: number; placements: number }; locations: string[]; consequences: string[]; recommendedAction: 'archive' | null; deletionAllowed: boolean; confirmationPhrase: string; impactVersion: string }
 interface Envelope<T> { data: T }
