@@ -31,6 +31,7 @@ import { DocumentNode } from './nodes/DocumentNode';
 import { AudioNode } from './nodes/AudioNode';
 import { GroupNode } from './nodes/GroupNode';
 import { ResourceNode } from './nodes/ResourceNode';
+import { FolderNode } from './nodes/FolderNode';
 import type { DiagramDocument } from '../../data/useDiagrams';
 
 const nodeTypes: NodeTypes = {
@@ -42,6 +43,7 @@ const nodeTypes: NodeTypes = {
     document: DocumentNode,
     audio: AudioNode,
     resource: ResourceNode,
+    folder: FolderNode,
 };
 
 const edgeTypes = {

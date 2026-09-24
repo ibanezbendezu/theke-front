@@ -21,10 +21,14 @@ interface CanvasState {
     onConnect: (connection: Connection) => void;
     addNode: (node: FlowNode) => void;
     addResourceRepresentation: (resourceId: string, preferred?: { x: number; y: number }) => string;
+    addFolderRepresentation: (folderId: string, projectId: string, preferred?: { x: number; y: number }) => string;
     addUploadedResource: (resourceId: string, batchId: string, preferred: { x: number; y: number }, total: number) => string[];
     removeNodes: (ids: string[]) => void;
     focusRequest: { id: string; nonce: string } | null;
     focusNode: (id: string) => void;
+    inspectorOpen: boolean;
+    setInspectorOpen: (open: boolean) => void;
+    openCanvasNode: (id: string) => void;
     updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
     loadDocument: (nodes: FlowNode[], edges: Edge[], viewport?: { x: number; y: number; zoom: number }) => void;
     setViewport: (viewport: { x: number; y: number; zoom: number }) => void;
@@ -38,6 +42,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     edges: initialEdges,
     viewport: { x: 0, y: 0, zoom: 1 },
     focusRequest: null,
+    inspectorOpen: true,
 
     onNodesChange: (changes) => {
         set({ nodes: applyNodeChanges(changes, get().nodes) });
@@ -69,6 +74,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const origin = preferred ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom };
         const position = placeResource(get().nodes, origin);
         set({ nodes: [...get().nodes, { id, type: 'resource', position, data: { resourceId }, selected: true }] });
+      return id;
+    },
+    addFolderRepresentation: (folderId, projectId, preferred) => {
+        const id = crypto.randomUUID(); const viewport = get().viewport;
+        const origin = preferred ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom };
+        const position = placeResource(get().nodes, origin);
+        set({ nodes: [...get().nodes, { id, type: 'folder', position, data: { folderId, projectId }, selected: true }] });
         return id;
     },
     addUploadedResource: (resourceId, batchId, preferred, total) => {
@@ -84,6 +96,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     },
     removeNodes: ids => set(state => ({ nodes: state.nodes.filter(node => !ids.includes(node.id)), edges: state.edges.filter(edge => !ids.includes(edge.source) && !ids.includes(edge.target)) })),
     focusNode: id => set(state => ({ focusRequest: { id, nonce: crypto.randomUUID() }, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
+    setInspectorOpen: inspectorOpen => set({ inspectorOpen }),
+    openCanvasNode: id => set(state => ({ inspectorOpen: true, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
     updateNodeData: (nodeId, data) => set({ nodes: get().nodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node) }),
 
     loadDocument: (nodes, edges, viewport) => set({ nodes, edges, ...(viewport ? { viewport } : {}) }),

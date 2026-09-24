@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
+import { Folder } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useOrganization } from '../../data/useOrganization';
 import { useResources } from '../../data/useResources';
 import { CanvasDialog } from './CanvasDialog';
 
-export function CanvasResourcePanel({ projectId, onAdd, onSelect }: { projectId: string; onAdd: () => void; onSelect: (id: string) => void }) {
+export function CanvasResourcePanel({ projectId, onAdd, onSelect, onSelectFolder }: { projectId: string; onAdd: () => void; onSelect: (id: string) => void; onSelectFolder: (id: string) => void }) {
   const organization = useOrganization(projectId);
   return <aside className="w-56 shrink-0 overflow-auto border-r border-border p-3" aria-label="Recursos"><h2 className="text-sm font-semibold">Recursos</h2><Button variant="primary" className="mt-3 w-full" onClick={onAdd}>Añadir recurso</Button><p className="mt-3 text-xs text-outline">Recursos de este proyecto. Puedes arrastrarlos al lienzo.</p>
     {organization.isPending && <p role="status" className="mt-3 text-xs">Cargando recursos…</p>}
     {organization.isError && <p role="alert" className="mt-3 text-xs">No se pudieron cargar los recursos.</p>}
+    {organization.data?.folders.some(item => !item.archivedAt) && <h3 className="mt-4 text-xs font-semibold">Carpetas</h3>}
+    {organization.data?.folders.filter(item => !item.archivedAt).map(item => <button key={item.id} type="button" onClick={() => onSelectFolder(item.id)} className="mt-2 flex w-full items-center gap-2 rounded border border-border bg-background p-2 text-left text-xs hover:border-primary focus-visible:outline-2" title="Añadir carpeta compacta al lienzo"><Folder size={15} aria-hidden="true" />{item.name}</button>)}
+    {organization.data?.resources.some(item => !item.archivedAt) && <h3 className="mt-4 text-xs font-semibold">Recursos</h3>}
     {organization.data?.resources.filter(item => !item.archivedAt).map(item => <button key={item.resourceId} type="button" draggable onClick={() => onSelect(item.resourceId)} onDragStart={event => { event.dataTransfer.setData('application/x-theke-resource', item.resourceId); event.dataTransfer.effectAllowed = 'copy'; }} className="mt-2 block w-full cursor-grab rounded border border-border bg-background p-2 text-left text-xs hover:border-primary focus-visible:outline-2" title="Añadir o arrastrar al lienzo">{item.title}</button>)}
     {organization.data?.resources.length === 0 && <p className="mt-3 text-xs text-outline">Aún no hay recursos en el proyecto.</p>}
   </aside>;

@@ -11,6 +11,8 @@ import { useCanvasStore } from '../store/useCanvasStore';
 import { useCanvasUploadBatches } from '../features/canvas/useCanvasUploadBatches';
 import { CanvasUploadTray } from '../features/canvas/CanvasUploadTray';
 import { CanvasDialog } from '../features/canvas/CanvasDialog';
+import { CanvasResourceInspector } from '../features/canvas/CanvasResourceInspector';
+import { CanvasFolderInspector } from '../features/canvas/CanvasFolderInspector';
 
 export function DiagramEditor() {
   const { diagramId } = useParams();
@@ -18,7 +20,7 @@ export function DiagramEditor() {
 }
 
 function DiagramEditorCore() {
-  const { projectId, diagramId } = useParams(); const navigate = useNavigate(); const diagram = useDiagram(diagramId); const [leftOpen, setLeftOpen] = useState(true); const [rightOpen, setRightOpen] = useState(true);
+  const { projectId, diagramId } = useParams(); const navigate = useNavigate(); const diagram = useDiagram(diagramId); const [leftOpen, setLeftOpen] = useState(true); const rightOpen = useCanvasStore(state => state.inspectorOpen); const setRightOpen = useCanvasStore(state => state.setInspectorOpen);
   const [pickerOpen, setPickerOpen] = useState(false); const [preferred, setPreferred] = useState<{ x: number; y: number } | undefined>(); const [duplicate, setDuplicate] = useState<{ resourceId: string; position?: { x: number; y: number } } | null>(null);
   const [readyDiagramId, setReadyDiagramId] = useState<string | null>(null);
   const [uploadPickerOpen, setUploadPickerOpen] = useState(false); const [uploadPosition, setUploadPosition] = useState({ x: 0, y: 0 });
@@ -27,10 +29,13 @@ function DiagramEditorCore() {
   const pickFiles = (position?: { x: number; y: number }) => { const viewport = useCanvasStore.getState().viewport; setUploadPosition(position ?? { x: Math.round((window.innerWidth / 2 - viewport.x) / viewport.zoom), y: Math.round((window.innerHeight / 2 - viewport.y) / viewport.zoom) }); setUploadPickerOpen(true); };
   const uploadAt = (files: File[], position?: { x: number; y: number }) => { const viewport = useCanvasStore.getState().viewport; uploads.addFiles(files, position ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom }); };
   const nodes = useCanvasStore(state => state.nodes); const usedIds = new Set(nodes.map(node => node.data?.resourceId).filter((id): id is string => typeof id === 'string'));
+  const selectedResource = readyDiagramId === diagramId ? nodes.find(node => node.selected && node.type === 'resource' && typeof node.data?.resourceId === 'string') : undefined;
+  const selectedFolder = readyDiagramId === diagramId ? nodes.find(node => node.selected && node.type === 'folder' && typeof node.data?.folderId === 'string') : undefined;
   const openPicker = (position?: { x: number; y: number }) => { setPreferred(position); setPickerOpen(true); };
   const addDirect = (resourceId: string, position?: { x: number; y: number }) => { useCanvasStore.getState().addResourceRepresentation(resourceId, position); setDuplicate(null); setPickerOpen(false); };
   const tryAdd = (resourceId: string, position?: { x: number; y: number }) => { if (usedIds.has(resourceId)) setDuplicate({ resourceId, position }); else addDirect(resourceId, position); };
   const focusExisting = (resourceId: string) => { const existing = useCanvasStore.getState().nodes.find(node => node.data?.resourceId === resourceId); if (existing) useCanvasStore.getState().focusNode(existing.id); setDuplicate(null); setPickerOpen(false); };
+  const addFolder = (folderId: string) => { const existing = useCanvasStore.getState().nodes.find(node => node.type === 'folder' && node.data?.folderId === folderId); if (existing) { useCanvasStore.getState().focusNode(existing.id); useCanvasStore.getState().setInspectorOpen(true); } else if (diagram.data) useCanvasStore.getState().addFolderRepresentation(folderId, diagram.data.projectId); };
   if (diagram.isPending) return <p role="status" className="p-6">Cargando diagrama…</p>;
   if (diagram.isError || !diagram.data) return <div role="alert" className="p-6"><p>No se pudo abrir el diagrama.</p><Button className="mt-3" onClick={() => diagram.refetch()}>Reintentar</Button></div>;
   return <main className="flex h-screen min-h-0 flex-col bg-background text-on-background">
@@ -41,12 +46,12 @@ function DiagramEditorCore() {
     <div className="flex min-h-0 flex-1">
       <nav aria-label="Herramientas del editor" className="flex w-10 shrink-0 flex-col items-center gap-1 border-r border-border bg-surface-variant/80 py-1 supports-[not(backdrop-filter:blur(1px))]:bg-background">
         <Button size="icon" title={leftOpen ? 'Ocultar recursos' : 'Mostrar recursos'} aria-label={leftOpen ? 'Ocultar recursos' : 'Mostrar recursos'} icon={leftOpen ? PanelLeftClose : PanelLeftOpen} onClick={() => setLeftOpen(value => !value)} />
-        <Button size="icon" title={rightOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'} aria-label={rightOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'} icon={rightOpen ? PanelRightClose : PanelRightOpen} onClick={() => setRightOpen(value => !value)} />
+        <Button size="icon" title={rightOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'} aria-label={rightOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'} icon={rightOpen ? PanelRightClose : PanelRightOpen} onClick={() => setRightOpen(!rightOpen)} />
         {!diagram.data.archivedAt && <Button size="icon" title="Cargar archivos en el canvas" aria-label="Cargar archivos en el canvas" icon={Upload} onClick={() => pickFiles()} />}
       </nav>
-      {leftOpen && (diagram.data.archivedAt ? <aside className="w-56 shrink-0 border-r border-border p-3">Recursos</aside> : readyDiagramId === diagram.data.id ? <CanvasResourcePanel projectId={diagram.data.projectId} onAdd={() => openPicker()} onSelect={id => tryAdd(id)} /> : <aside className="w-56 shrink-0 border-r border-border p-3 text-xs text-outline">Cargando recursos del canvas…</aside>)}
+      {leftOpen && (diagram.data.archivedAt ? <aside className="w-56 shrink-0 border-r border-border p-3">Recursos</aside> : readyDiagramId === diagram.data.id ? <CanvasResourcePanel projectId={diagram.data.projectId} onAdd={() => openPicker()} onSelect={id => tryAdd(id)} onSelectFolder={addFolder} /> : <aside className="w-56 shrink-0 border-r border-border p-3 text-xs text-outline">Cargando recursos del canvas…</aside>)}
       <section className="min-w-0 flex-1" aria-label="Lienzo">{diagram.data.archivedAt ? <div className="relative h-full"><div className="pointer-events-none h-full"><CanvasEditor document={diagram.data.document} /></div><p role="status" className="absolute right-3 top-3 rounded border border-border bg-background px-3 py-2 text-sm">Diagrama archivado. Restáuralo desde el proyecto para editar.</p></div> : <DiagramWorkspace diagram={diagram.data} refetch={diagram.refetch} onAddResource={openPicker} onDropResource={tryAdd} onDropFiles={uploadAt} onPickFiles={pickFiles} onCanvasReady={canvasReady} />}</section>
-      {rightOpen && <aside className="w-[304px] shrink-0 overflow-auto border-l border-border p-3" aria-label="Propiedades"><h2 className="text-sm font-semibold">Propiedades</h2><p className="mt-2 text-xs text-outline">Selecciona un elemento para editarlo.</p></aside>}
+      {rightOpen && <aside className="w-[304px] shrink-0 overflow-auto border-l border-border p-3" aria-label="Propiedades">{selectedResource ? <CanvasResourceInspector key={selectedResource.id} nodeId={selectedResource.id} resourceId={selectedResource.data.resourceId as string} caption={typeof selectedResource.data.caption === 'string' ? selectedResource.data.caption : ''} /> : selectedFolder ? <CanvasFolderInspector key={selectedFolder.id} nodeId={selectedFolder.id} projectId={diagram.data.projectId} folderId={selectedFolder.data.folderId as string} caption={typeof selectedFolder.data.caption === 'string' ? selectedFolder.data.caption : ''} onAddResource={id => tryAdd(id)} /> : <><h2 className="text-sm font-semibold">Propiedades</h2><p className="mt-2 text-xs text-outline">Selecciona un elemento para editarlo.</p></>}</aside>}
     </div>
     {pickerOpen && <CanvasResourcePicker projectId={diagram.data.projectId} usedIds={usedIds} onClose={() => setPickerOpen(false)} onSelect={id => tryAdd(id, preferred)} onFocus={focusExisting} />}
     {duplicate && <CanvasDialog titleId="duplicate-resource-title" onClose={() => setDuplicate(null)} className="max-w-md"><h2 id="duplicate-resource-title" className="font-semibold">Este recurso ya está en el diagrama</h2><p className="mt-2 text-sm text-outline">Puedes ir a su representación o añadir otra independiente.</p><div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => focusExisting(duplicate.resourceId)}>Ir al uso</Button><Button variant="primary" onClick={() => addDirect(duplicate.resourceId, duplicate.position)}>Añadir otra representación</Button><Button onClick={() => setDuplicate(null)}>Cancelar</Button></div></CanvasDialog>}
