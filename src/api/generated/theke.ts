@@ -11,6 +11,8 @@ import type {
   FolderInput,
   FolderResponse,
   GetResourceAccessParams,
+  LinkInput,
+  LinkUpdateInput,
   ListNotesParams,
   ListProjectsParams,
   ListResourcesParams,
@@ -1120,6 +1122,175 @@ export const getCancelUploadUrl = (id: string,) => {
 export const cancelUpload = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<cancelUploadResponse> => {
 
   return thekeFetch<cancelUploadResponse>(getCancelUploadUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type createLinkResponse201 = {
+  data: ResourceResponse
+  status: 201
+}
+
+export type createLinkResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type createLinkResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type createLinkResponseSuccess = (createLinkResponse201) & {
+  headers: Headers;
+};
+export type createLinkResponseError = (createLinkResponse400 | createLinkResponse401) & {
+  headers: Headers;
+};
+
+export type createLinkResponse = (createLinkResponseSuccess | createLinkResponseError)
+
+export const getCreateLinkUrl = () => {
+
+
+
+
+  return `/v1/links`
+}
+
+export const createLink = async (linkInput: LinkInput, options?: Parameters<typeof thekeFetch>[1]): Promise<createLinkResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<createLinkResponse>(getCreateLinkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(linkInput)
+  }
+);}
+
+
+
+export type updateLinkResponse200 = {
+  data: ResourceResponse
+  status: 200
+}
+
+export type updateLinkResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type updateLinkResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type updateLinkResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type updateLinkResponseSuccess = (updateLinkResponse200) & {
+  headers: Headers;
+};
+export type updateLinkResponseError = (updateLinkResponse400 | updateLinkResponse401 | updateLinkResponse404) & {
+  headers: Headers;
+};
+
+export type updateLinkResponse = (updateLinkResponseSuccess | updateLinkResponseError)
+
+export const getUpdateLinkUrl = (id: string,) => {
+
+
+
+
+  return `/v1/links/${id}`
+}
+
+export const updateLink = async (id: string,
+    linkUpdateInput: LinkUpdateInput, options?: Parameters<typeof thekeFetch>[1]): Promise<updateLinkResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<updateLinkResponse>(getUpdateLinkUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(linkUpdateInput)
+  }
+);}
+
+
+
+export type retryLinkMetadataResponse201 = {
+  data: ResourceResponse
+  status: 201
+}
+
+export type retryLinkMetadataResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type retryLinkMetadataResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type retryLinkMetadataResponseSuccess = (retryLinkMetadataResponse201) & {
+  headers: Headers;
+};
+export type retryLinkMetadataResponseError = (retryLinkMetadataResponse401 | retryLinkMetadataResponse404) & {
+  headers: Headers;
+};
+
+export type retryLinkMetadataResponse = (retryLinkMetadataResponseSuccess | retryLinkMetadataResponseError)
+
+export const getRetryLinkMetadataUrl = (id: string,) => {
+
+
+
+
+  return `/v1/links/${id}/metadata-retries`
+}
+
+export const retryLinkMetadata = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<retryLinkMetadataResponse> => {
+
+  return thekeFetch<retryLinkMetadataResponse>(getRetryLinkMetadataUrl(id),
   {
     ...options,
     method: 'POST'

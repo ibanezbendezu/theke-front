@@ -18,15 +18,24 @@ vi.mock('../src/data/useResources', () => ({
   useResource: () => ({ data: resourceState.detail, isPending: false, isError: false }),
   useResourceAccess: () => ({ data: { url: 'https://example.test/preview' }, isPending: false, isError: false }),
   useResourceActions: () => ({ access: vi.fn().mockResolvedValue({ url: 'https://example.test/file' }), accessibility: { mutateAsync: vi.fn(), isPending: false } }),
+  useLinkActions: () => ({ create: { mutateAsync: vi.fn(), isPending: false }, update: { mutateAsync: vi.fn(), isPending: false }, retry: { mutateAsync: vi.fn(), isPending: false } }),
 }));
 afterEach(() => { cleanup(); resourceState.detail = undefined; });
 describe('library notes', () => {
   it('explica el estado vacío y conserva la validación local', () => {
     render(<MemoryRouter initialEntries={['/library']}><Library /></MemoryRouter>);
     expect(screen.getByText('Tu Biblioteca está vacía')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Crear una nota' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Crear recurso' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Crear nota' }));
     fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
     expect(screen.getByRole('status')).toHaveTextContent('título es obligatorio');
+  });
+  it('ofrece guardar un enlace HTTP o HTTPS', () => {
+    render(<MemoryRouter initialEntries={['/library']}><Library /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Crear recurso' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar enlace web' }));
+    expect(screen.getByLabelText('Dirección web')).toHaveAttribute('type', 'url');
+    expect(screen.getByRole('button', { name: 'Guardar enlace' })).toBeInTheDocument();
   });
   it('muestra cada archivo seleccionado con progreso y cancelación', () => {
     render(<MemoryRouter initialEntries={['/library']}><Library /></MemoryRouter>);

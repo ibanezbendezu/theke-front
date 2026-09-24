@@ -11,4 +11,5 @@ export type ListResourcesType = typeof ListResourcesType[keyof typeof ListResour
 export const ListResourcesType = {
   note: 'note',
   file: 'file',
+  link: 'link',
 } as const;

@@ -4,6 +4,7 @@
  * Theke API
  * OpenAPI spec version: 1.0.0
  */
+import type { ResourceMetadataStatus } from './resourceMetadataStatus';
 import type { ResourceStatus } from './resourceStatus';
 import type { ResourceType } from './resourceType';
 
@@ -25,4 +26,10 @@ export interface Resource {
   accessibilityText?: string | null;
   accessibilityRequired: boolean;
   accessibilityMissing: boolean;
+  /** @nullable */
+  url?: string | null;
+  /** @nullable */
+  previewImageUrl?: string | null;
+  /** @nullable */
+  metadataStatus?: ResourceMetadataStatus;
 }
