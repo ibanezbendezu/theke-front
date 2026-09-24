@@ -21,6 +21,8 @@ export interface Resource {
   origin: string;
   status: ResourceStatus;
   updatedAt: string;
+  /** @nullable */
+  archivedAt: string | null;
   content?: string;
   /** @nullable */
   accessibilityText?: string | null;

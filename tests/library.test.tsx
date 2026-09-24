@@ -22,6 +22,7 @@ vi.mock('../src/data/useResources', () => ({
 }));
 vi.mock('../src/data/useProjects', () => ({ useProjects: () => ({ data: { pages: [{ data: [{ id: 'project-1', name: 'Proyecto uno' }] }] } }) }));
 vi.mock('../src/data/useOrganization', () => ({ useOrganization: () => ({ data: { folders: [{ id: 'folder-1', name: 'Carpeta uno', archivedAt: null }], resources: [] }, isPending: false }) }));
+vi.mock('../src/data/useImpacts', () => ({ useImpact: () => ({ isPending: false }), useImpactActions: () => ({ execute: { mutateAsync: vi.fn(), isPending: false }, restoreResource: { mutate: vi.fn(), isPending: false } }) }));
 afterEach(() => { cleanup(); resourceState.detail = undefined; });
 describe('library notes', () => {
   it('explica el estado vacío y conserva la validación local', () => {

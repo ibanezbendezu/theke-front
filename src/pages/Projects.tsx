@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Archive, FileText, Folder, MoreHorizontal, RotateCcw } from 'lucide-react';
+import { Archive, FileText, Folder, MoreHorizontal, RotateCcw, Trash2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
+import { ImpactDialog, type ImpactRequest } from '../components/ui/ImpactDialog';
 import { ViewToolbar } from '../components/ui/ViewToolbar';
 import { type Project, useProject, useProjectActions, useProjects } from '../data/useProjects';
 import { useOrganization, useOrganizationActions } from '../data/useOrganization';
@@ -18,6 +19,7 @@ export function Projects() {
   const [editing, setEditing] = useState<Project | 'new' | null>(null);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [impactRequest, setImpactRequest] = useState<ImpactRequest | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,8 +47,11 @@ export function Projects() {
     <Button onClick={() => navigate('/projects')}>← Proyectos</Button>
     {detail.isPending && <p role="status" className="mt-5 text-outline">Cargando proyecto…</p>}
     {detail.isError && <div role="alert" className="mt-5"><p className="text-red-600">No se pudo abrir el proyecto.</p><Button variant="outline" onClick={() => detail.refetch()}>Reintentar</Button></div>}
-    {detail.data && <><h1 className="mt-5 text-2xl font-semibold">{detail.data.name}</h1><Button className="mt-3" variant="outline" onClick={() => edit(detail.data)}>Renombrar</Button><ProjectWorkspace projectId={detail.data.id} /></>}
+    {detail.data && <><h1 className="mt-5 text-2xl font-semibold">{detail.data.name}</h1><div className="mt-3 flex gap-2"><Button variant="outline" onClick={() => edit(detail.data)}>Renombrar</Button><Button variant="outline" onClick={() => setImpactRequest({ entityType: 'project', id: detail.data.id, action: 'archive' })}>Archivar</Button><Button variant="outline" onClick={() => setImpactRequest({ entityType: 'project', id: detail.data.id, action: 'delete' })}>Eliminar</Button></div><ProjectWorkspace projectId={detail.data.id} openImpact={setImpactRequest} /></>}
     {editing && <Editor name={name} setName={setName} error={error} busy={actions.rename.isPending} inputRef={inputRef} save={save} close={close} />}
+    {impactRequest && (
+      <ImpactDialog request={impactRequest} onClose={() => setImpactRequest(null)} onDone={() => { setImpactRequest(null); navigate('/projects'); }}/>
+    )}
   </section>;
 
   return <section className="w-full px-6 md:px-8 py-6 pb-32" aria-labelledby="projects-title">
@@ -66,32 +71,33 @@ export function Projects() {
       {status === 'active' && <Button className="mt-4" variant="primary" onClick={() => edit('new')}>Crear primer proyecto</Button>}
     </div>}
     {items.length > 0 && (viewMode === 'grid' ? <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      {items.map(project => <div key={project.id}><Card title={project.name} subtitle={new Date(project.updatedAt).toLocaleDateString()} icon={<Folder size={32} />} onClick={() => navigate(`/projects/${project.id}`)} /><Actions project={project} status={status} rename={() => edit(project)} archive={() => { if (window.confirm(`¿Archivar “${project.name}”?`)) actions.archive.mutate(project.id); }} restore={() => actions.restore.mutate(project.id)} /></div>)}
+      {items.map(project => <div key={project.id}><Card title={project.name} subtitle={new Date(project.updatedAt).toLocaleDateString()} icon={<Folder size={32} />} onClick={() => navigate(`/projects/${project.id}`)} /><Actions project={project} status={status} rename={() => edit(project)} archive={() => setImpactRequest({ entityType: 'project', id: project.id, action: 'archive' })} remove={() => setImpactRequest({ entityType: 'project', id: project.id, action: 'delete' })} restore={() => actions.restore.mutate(project.id)} /></div>)}
     </div> : <div className="divide-y divide-border border-y border-border">
-      {items.map(project => <div key={project.id} className="flex items-center gap-3 py-2"><button className="flex flex-1 items-center gap-2 text-left hover:underline focus-visible:outline-2" onClick={() => navigate(`/projects/${project.id}`)}><Folder size={18} />{project.name}</button><Actions project={project} status={status} rename={() => edit(project)} archive={() => { if (window.confirm(`¿Archivar “${project.name}”?`)) actions.archive.mutate(project.id); }} restore={() => actions.restore.mutate(project.id)} /></div>)}
+      {items.map(project => <div key={project.id} className="flex items-center gap-3 py-2"><button className="flex flex-1 items-center gap-2 text-left hover:underline focus-visible:outline-2" onClick={() => navigate(`/projects/${project.id}`)}><Folder size={18} />{project.name}</button><Actions project={project} status={status} rename={() => edit(project)} archive={() => setImpactRequest({ entityType: 'project', id: project.id, action: 'archive' })} remove={() => setImpactRequest({ entityType: 'project', id: project.id, action: 'delete' })} restore={() => actions.restore.mutate(project.id)} /></div>)}
     </div>)}
     {query.hasNextPage && <Button className="mt-5" variant="outline" disabled={query.isFetchingNextPage} onClick={() => query.fetchNextPage()}>{query.isFetchingNextPage ? 'Cargando…' : 'Cargar más'}</Button>}
     {editing && <Editor name={name} setName={setName} error={error} busy={actions.create.isPending || actions.rename.isPending} inputRef={inputRef} save={save} close={close} />}
+    {impactRequest && <ImpactDialog request={impactRequest} onClose={() => setImpactRequest(null)} onDone={() => setImpactRequest(null)} />}
   </section>;
 }
 
-function Actions({ project, status, rename, archive, restore }: { project: Project; status: 'active' | 'archived'; rename: () => void; archive: () => void; restore: () => void }) {
-  return <div className="flex justify-end gap-1 mt-1"><Button size="icon" title={`Renombrar ${project.name}`} aria-label={`Renombrar ${project.name}`} icon={MoreHorizontal} onClick={rename} />{status === 'active' ? <Button size="icon" title={`Archivar ${project.name}`} aria-label={`Archivar ${project.name}`} icon={Archive} onClick={archive} /> : <Button size="icon" title={`Restaurar ${project.name}`} aria-label={`Restaurar ${project.name}`} icon={RotateCcw} onClick={restore} />}</div>;
+function Actions({ project, status, rename, archive, remove, restore }: { project: Project; status: 'active' | 'archived'; rename: () => void; archive: () => void; remove: () => void; restore: () => void }) {
+  return <div className="flex justify-end gap-1 mt-1"><Button size="icon" title={`Renombrar ${project.name}`} aria-label={`Renombrar ${project.name}`} icon={MoreHorizontal} onClick={rename} />{status === 'active' ? <><Button size="icon" title={`Archivar ${project.name}`} aria-label={`Archivar ${project.name}`} icon={Archive} onClick={archive} /><Button size="icon" title={`Eliminar ${project.name}`} aria-label={`Eliminar ${project.name}`} icon={Trash2} onClick={remove} /></> : <Button size="icon" title={`Restaurar ${project.name}`} aria-label={`Restaurar ${project.name}`} icon={RotateCcw} onClick={restore} />}</div>;
 }
 
 function Editor({ name, setName, error, busy, inputRef, save, close }: { name: string; setName: (value: string) => void; error: string; busy: boolean; inputRef: React.RefObject<HTMLInputElement | null>; save: (event: FormEvent) => void; close: () => void }) {
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={event => { if (event.target === event.currentTarget) close(); }}><div role="dialog" aria-modal="true" aria-labelledby="project-editor-title" className="w-full max-w-md rounded-lg border border-border bg-background p-5 shadow-xl"><h2 id="project-editor-title" className="text-lg font-semibold">Nombre del proyecto</h2><form className="mt-4" onSubmit={save}><Input ref={inputRef} icon={undefined} value={name} maxLength={MAX_NAME_LENGTH + 1} aria-invalid={Boolean(error)} aria-describedby={error ? 'project-name-error' : undefined} onChange={event => setName(event.target.value)} />{error && <p id="project-name-error" role="alert" className="mt-2 text-sm text-red-600">{error}</p>}<div className="mt-5 flex justify-end gap-2"><Button type="button" onClick={close}>Cancelar</Button><Button type="submit" variant="primary" disabled={busy}>{busy ? 'Guardando…' : 'Guardar'}</Button></div></form></div></div>;
 }
 
-function ProjectWorkspace({ projectId }: { projectId: string }) {
+function ProjectWorkspace({ projectId, openImpact }: { projectId: string; openImpact: (request: ImpactRequest) => void }) {
   const organization = useOrganization(projectId); const actions = useOrganizationActions(projectId); const library = useNotes(); const [folderName, setFolderName] = useState(''); const [showLibrary, setShowLibrary] = useState(false);
   if (organization.isPending) return <p role="status" className="mt-6">Cargando organización…</p>;
   if (organization.isError || !organization.data) return <p role="alert" className="mt-6 text-red-600">No se pudo cargar la organización.</p>;
   const activeFolders = organization.data.folders.filter(folder => !folder.archivedAt); const archivedFolders = organization.data.folders.filter(folder => folder.archivedAt); const available = (library.data?.pages.flatMap(page => page.data) ?? []).filter(note => !organization.data.resources.some(item => item.resourceId === note.id));
   return <div className="mt-6"><div className="flex flex-wrap gap-2"><input aria-label="Nombre de carpeta" className="rounded border border-border bg-background px-2" value={folderName} onChange={event => setFolderName(event.target.value)} /><Button variant="outline" onClick={async () => { if (folderName.trim()) { await actions.createFolder.mutateAsync(folderName); setFolderName(''); } }}>Crear carpeta</Button><Button variant="primary" onClick={() => setShowLibrary(value => !value)}>Añadir desde Biblioteca</Button></div>
     {showLibrary && <section className="mt-4 rounded border border-border p-3" aria-label="Selector de Biblioteca">{available.length === 0 ? <p className="text-sm text-outline">No hay recursos disponibles.</p> : available.map(note => <div key={note.id} className="flex items-center justify-between py-2"><span>{note.title}</span><Button onClick={() => actions.addResources.mutate([note.id])}>Añadir</Button></div>)}</section>}
-    <h2 className="mt-7 font-semibold">Carpetas</h2>{activeFolders.length === 0 && <p className="text-sm text-outline">Los recursos están en la raíz.</p>}{activeFolders.map(folder => <div key={folder.id} className="mt-2 flex items-center gap-2"><Folder size={18}/><span className="flex-1">{folder.name}</span><Button onClick={() => { const value = window.prompt('Nuevo nombre', folder.name); if (value) actions.renameFolder.mutate({ id: folder.id, name: value }); }}>Renombrar</Button><Button onClick={() => actions.archiveFolder.mutate(folder.id)}>Archivar</Button></div>)}
-    <h2 className="mt-7 font-semibold">Recursos</h2>{organization.data.resources.length === 0 ? <p className="text-sm text-outline">Todavía no añadiste recursos.</p> : organization.data.resources.map(resource => <div key={resource.id} className="mt-2 flex items-center gap-3 border-b border-border py-2"><FileText size={18}/><span className="flex-1">{resource.title}</span><label className="text-sm">Ubicación <select className="ml-2 rounded border border-border bg-background p-1" value={resource.folderId ?? ''} onChange={event => actions.moveResources.mutate({ resourceIds: [resource.resourceId], folderId: event.target.value || null })}><option value="">Raíz</option>{activeFolders.map(folder => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></label></div>)}
+    <h2 className="mt-7 font-semibold">Carpetas</h2>{activeFolders.length === 0 && <p className="text-sm text-outline">Los recursos están en la raíz.</p>}{activeFolders.map(folder => <div key={folder.id} className="mt-2 flex items-center gap-2"><Folder size={18}/><span className="flex-1">{folder.name}</span><Button onClick={() => { const value = window.prompt('Nuevo nombre', folder.name); if (value) actions.renameFolder.mutate({ id: folder.id, name: value }); }}>Renombrar</Button><Button onClick={() => openImpact({ entityType: 'folder', id: folder.id, action: 'archive' })}>Archivar</Button></div>)}
+    <h2 className="mt-7 font-semibold">Recursos</h2>{organization.data.resources.length === 0 ? <p className="text-sm text-outline">Todavía no añadiste recursos.</p> : organization.data.resources.map(resource => <div key={resource.id} className="mt-2 flex items-center gap-3 border-b border-border py-2"><FileText size={18}/><span className="flex-1">{resource.title}{resource.archivedAt && <small className="ml-2 text-outline">Archivado</small>}</span><label className="text-sm">Ubicación <select className="ml-2 rounded border border-border bg-background p-1" value={resource.folderId ?? ''} onChange={event => actions.moveResources.mutate({ resourceIds: [resource.resourceId], folderId: event.target.value || null })}><option value="">Raíz</option>{activeFolders.map(folder => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></label></div>)}
     {archivedFolders.length > 0 && <><h2 className="mt-7 font-semibold">Carpetas archivadas</h2>{archivedFolders.map(folder => <div key={folder.id} className="mt-2 flex items-center gap-2"><span className="flex-1">{folder.name}</span><Button onClick={() => actions.restoreFolder.mutate(folder.id)}>Restaurar</Button></div>)}</>}
   </div>;
 }

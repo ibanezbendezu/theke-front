@@ -10,7 +10,10 @@ import type {
   BadRequestResponse,
   FolderInput,
   FolderResponse,
+  GetImpactParams,
   GetResourceAccessParams,
+  ImpactConfirmationInput,
+  ImpactResponse,
   LinkInput,
   LinkUpdateInput,
   ListNotesParams,
@@ -1291,6 +1294,169 @@ export const getRetryLinkMetadataUrl = (id: string,) => {
 export const retryLinkMetadata = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<retryLinkMetadataResponse> => {
 
   return thekeFetch<retryLinkMetadataResponse>(getRetryLinkMetadataUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type getImpactResponse200 = {
+  data: ImpactResponse
+  status: 200
+}
+
+export type getImpactResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type getImpactResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getImpactResponseSuccess = (getImpactResponse200) & {
+  headers: Headers;
+};
+export type getImpactResponseError = (getImpactResponse400 | getImpactResponse404) & {
+  headers: Headers;
+};
+
+export type getImpactResponse = (getImpactResponseSuccess | getImpactResponseError)
+
+export const getGetImpactUrl = (entityType: 'resource' | 'project' | 'folder',
+    id: string,
+    params: GetImpactParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/impacts/${entityType}/${id}?${stringifiedParams}` : `/v1/impacts/${entityType}/${id}`
+}
+
+export const getImpact = async (entityType: 'resource' | 'project' | 'folder',
+    id: string,
+    params: GetImpactParams, options?: Parameters<typeof thekeFetch>[1]): Promise<getImpactResponse> => {
+
+  return thekeFetch<getImpactResponse>(getGetImpactUrl(entityType,id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type executeImpactActionResponse201 = {
+  data: ImpactResponse
+  status: 201
+}
+
+export type executeImpactActionResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type executeImpactActionResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type executeImpactActionResponse409 = {
+  data: ApiErrorResponse
+  status: 409
+}
+
+export type executeImpactActionResponseSuccess = (executeImpactActionResponse201) & {
+  headers: Headers;
+};
+export type executeImpactActionResponseError = (executeImpactActionResponse400 | executeImpactActionResponse404 | executeImpactActionResponse409) & {
+  headers: Headers;
+};
+
+export type executeImpactActionResponse = (executeImpactActionResponseSuccess | executeImpactActionResponseError)
+
+export const getExecuteImpactActionUrl = (entityType: 'resource' | 'project' | 'folder',
+    id: string,) => {
+
+
+
+
+  return `/v1/impacts/${entityType}/${id}`
+}
+
+export const executeImpactAction = async (entityType: 'resource' | 'project' | 'folder',
+    id: string,
+    impactConfirmationInput: ImpactConfirmationInput, options?: Parameters<typeof thekeFetch>[1]): Promise<executeImpactActionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<executeImpactActionResponse>(getExecuteImpactActionUrl(entityType,id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(impactConfirmationInput)
+  }
+);}
+
+
+
+export type restoreResourceResponse201 = {
+  data: ResourceResponse
+  status: 201
+}
+
+export type restoreResourceResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type restoreResourceResponseSuccess = (restoreResourceResponse201) & {
+  headers: Headers;
+};
+export type restoreResourceResponseError = (restoreResourceResponse404) & {
+  headers: Headers;
+};
+
+export type restoreResourceResponse = (restoreResourceResponseSuccess | restoreResourceResponseError)
+
+export const getRestoreResourceUrl = (id: string,) => {
+
+
+
+
+  return `/v1/resources/${id}/restore`
+}
+
+export const restoreResource = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<restoreResourceResponse> => {
+
+  return thekeFetch<restoreResourceResponse>(getRestoreResourceUrl(id),
   {
     ...options,
     method: 'POST'

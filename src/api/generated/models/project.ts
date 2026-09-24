@@ -14,6 +14,10 @@ export interface Project {
   name: string;
   /** @nullable */
   archivedAt: string | null;
+  /** @nullable */
+  deletedAt: string | null;
+  /** @nullable */
+  purgeAfter: string | null;
   createdAt: string;
   updatedAt: string;
 }

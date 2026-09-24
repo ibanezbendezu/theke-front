@@ -10,4 +10,5 @@ export type ResourceStatus = typeof ResourceStatus[keyof typeof ResourceStatus];
 
 export const ResourceStatus = {
   ready: 'ready',
+  archived: 'archived',
 } as const;

@@ -34,7 +34,7 @@ development_status:
   1-6-consultar-recursos-según-su-tipo: done
   1-7-guardar-enlaces-web-como-recursos: done
   1-8-buscar-y-filtrar-la-biblioteca: done
-  1-9-archivar-o-eliminar-con-impacto-visible: backlog
+  1-9-archivar-o-eliminar-con-impacto-visible: review
   epic-1-retrospective: optional
 
   epic-2: backlog

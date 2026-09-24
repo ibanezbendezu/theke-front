@@ -4,11 +4,13 @@
  * Theke API
  * OpenAPI spec version: 1.0.0
  */
+import type { ListResourcesStatus } from './listResourcesStatus';
 import type { ListResourcesType } from './listResourcesType';
 
 export type ListResourcesParams = {
 type?: ListResourcesType;
 cursor?: string;
+status?: ListResourcesStatus;
 /**
  * Coincidencia parcial por título
  * @maxLength 160
