@@ -14,12 +14,14 @@ vi.mock('../src/data/useUploads', () => ({
   useUploads: () => ({ uploads: {}, policy: { data: { maxBatchSize: 20, maxFileSize: 262144000, allowedMediaTypes: ['text/plain'] } }, create: vi.fn(() => new Promise(() => undefined)), finalize: vi.fn(), cancel: vi.fn() }),
 }));
 vi.mock('../src/data/useResources', () => ({
-  useResources: () => ({ data: { pages: [{ data: [], meta: { nextCursor: null } }] }, isPending: false, isError: false, hasNextPage: false }),
+  useResources: () => ({ data: { pages: [{ data: [], meta: { nextCursor: null } }] }, isPending: false, isFetching: false, isError: false, hasNextPage: false }),
   useResource: () => ({ data: resourceState.detail, isPending: false, isError: false }),
   useResourceAccess: () => ({ data: { url: 'https://example.test/preview' }, isPending: false, isError: false }),
   useResourceActions: () => ({ access: vi.fn().mockResolvedValue({ url: 'https://example.test/file' }), accessibility: { mutateAsync: vi.fn(), isPending: false } }),
   useLinkActions: () => ({ create: { mutateAsync: vi.fn(), isPending: false }, update: { mutateAsync: vi.fn(), isPending: false }, retry: { mutateAsync: vi.fn(), isPending: false } }),
 }));
+vi.mock('../src/data/useProjects', () => ({ useProjects: () => ({ data: { pages: [{ data: [{ id: 'project-1', name: 'Proyecto uno' }] }] } }) }));
+vi.mock('../src/data/useOrganization', () => ({ useOrganization: () => ({ data: { folders: [{ id: 'folder-1', name: 'Carpeta uno', archivedAt: null }], resources: [] }, isPending: false }) }));
 afterEach(() => { cleanup(); resourceState.detail = undefined; });
 describe('library notes', () => {
   it('explica el estado vacío y conserva la validación local', () => {
@@ -36,6 +38,12 @@ describe('library notes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Guardar enlace web' }));
     expect(screen.getByLabelText('Dirección web')).toHaveAttribute('type', 'url');
     expect(screen.getByRole('button', { name: 'Guardar enlace' })).toBeInTheDocument();
+  });
+  it('distingue una búsqueda sin coincidencias de una Biblioteca vacía', () => {
+    render(<MemoryRouter initialEntries={['/library?q=inexistente']}><Library /></MemoryRouter>);
+    expect(screen.getByRole('heading', { name: 'No hay resultados' })).toBeInTheDocument();
+    expect(screen.queryByText('Tu Biblioteca está vacía')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Búsqueda: inexistente/ })).toBeInTheDocument();
   });
   it('muestra cada archivo seleccionado con progreso y cancelación', () => {
     render(<MemoryRouter initialEntries={['/library']}><Library /></MemoryRouter>);

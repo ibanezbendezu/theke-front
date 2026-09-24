@@ -9,4 +9,14 @@ import type { ListResourcesType } from './listResourcesType';
 export type ListResourcesParams = {
 type?: ListResourcesType;
 cursor?: string;
+/**
+ * Coincidencia parcial por título
+ * @maxLength 160
+ */
+q?: string;
+projectId?: string;
+/**
+ * Requiere projectId
+ */
+folderId?: string;
 };
