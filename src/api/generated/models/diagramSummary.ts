@@ -4,9 +4,8 @@
  * Theke API
  * OpenAPI spec version: 1.0.0
  */
-import type { DiagramDocument } from './diagramDocument';
 
-export interface Diagram {
+export interface DiagramSummary {
   id: string;
   projectId: string;
   /**
@@ -14,7 +13,6 @@ export interface Diagram {
      * @maxLength 120
      */
   name: string;
-  document: DiagramDocument;
   revision: number;
   /** @nullable */
   archivedAt: string | null;

@@ -4,8 +4,8 @@
  * Theke API
  * OpenAPI spec version: 1.0.0
  */
-import type { Diagram } from './diagram';
+import type { DiagramSummary } from './diagramSummary';
 
 export interface DiagramListResponse {
-  data: Diagram[];
+  data: DiagramSummary[];
 }

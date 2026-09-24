@@ -1,0 +1,69 @@
+import { useAuth } from '@clerk/clerk-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ApiError } from '../api/httpClient';
+import { Button } from '../components/ui/Button';
+import { deleteCanvasDraft, readCanvasDraft, writeCanvasDraft, type CanvasDraft } from '../data/canvasJournal';
+import { migrateCanvasDocument } from '../data/canvasDocument';
+import { type Diagram, type DiagramDocument, useSaveDiagramDocument } from '../data/useDiagrams';
+import { CanvasEditor } from '../features/canvas/CanvasEditor';
+import { useCanvasStore } from '../store/useCanvasStore';
+
+function snapshot(): DiagramDocument {
+  const state = useCanvasStore.getState();
+  const nodes = JSON.parse(JSON.stringify(state.nodes)) as DiagramDocument['nodes'];
+  const edges = JSON.parse(JSON.stringify(state.edges)) as DiagramDocument['edges'];
+  for (const node of nodes) { const transient = node as unknown as Record<string, unknown>; delete transient.selected; delete transient.dragging; delete transient.measured; delete transient.internals; }
+  for (const edge of edges) delete (edge as unknown as Record<string, unknown>).selected;
+  return { schemaVersion: 1, nodes, edges, viewport: state.viewport };
+}
+const fingerprint = (document: DiagramDocument) => JSON.stringify(document);
+type SaveStatus = 'saved' | 'saving' | 'offline' | 'conflict' | 'storage-error';
+
+export function DiagramWorkspace({ diagram, refetch }: { diagram: Diagram; refetch: () => Promise<{ data?: Diagram }> }) {
+  const { userId } = useAuth(); const draftKey = `${userId}:${diagram.id}`; const save = useSaveDiagramDocument(diagram.id); const saveRef = useRef(save);
+  useEffect(() => { saveRef.current = save; }, [save]);
+  const remote = useMemo(() => { try { return { document: migrateCanvasDocument(diagram.document), error: '' }; } catch (error) { return { document: null, error: error instanceof Error ? error.message : 'No se pudo abrir el documento.' }; } }, [diagram.document]);
+  const initialRemote = useRef(remote);
+  const [choice, setChoice] = useState<'checking' | 'draft' | 'ready'>('checking'); const [document, setDocument] = useState<DiagramDocument | null>(null); const [status, setStatus] = useState<SaveStatus>('saved'); const [conflict, setConflict] = useState(false);
+  const revisionRef = useRef(diagram.revision); const confirmedRef = useRef(remote.document ? fingerprint(remote.document) : ''); const latestRef = useRef<CanvasDraft | null>(null); const retryRef = useRef<CanvasDraft | null>(null); const savingRef = useRef(false); const blockedRef = useRef(false); const unsubscribeRef = useRef<(() => void) | null>(null); const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null); const journalQueue = useRef<Promise<unknown>>(Promise.resolve()); const pumpRef = useRef<() => Promise<void>>(async () => {});
+  const queueWrite = useCallback((draft: CanvasDraft) => { journalQueue.current = journalQueue.current.catch(() => {}).then(() => writeCanvasDraft(draft)).catch(() => setStatus('storage-error')); }, []);
+  const schedule = useCallback((delay = 700) => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => void pumpRef.current(), delay); }, []);
+  const markChanged = useCallback(() => {
+    const next = snapshot(); if (fingerprint(next) === confirmedRef.current) return;
+    if (latestRef.current && fingerprint(latestRef.current.document) === fingerprint(next)) return;
+    const draft = { key: draftKey, document: next, baseRevision: revisionRef.current, operationId: crypto.randomUUID() }; latestRef.current = draft; queueWrite(draft); if (!blockedRef.current) { setStatus('saving'); schedule(); }
+  }, [draftKey, queueWrite, schedule]);
+  const pump = useCallback(async () => {
+    if (savingRef.current || blockedRef.current) return;
+    const draft = retryRef.current ?? latestRef.current; if (!draft) return;
+    savingRef.current = true; setStatus('saving');
+    try {
+      await journalQueue.current;
+      const saved = await saveRef.current(draft.document, draft.baseRevision, draft.operationId);
+      revisionRef.current = saved.revision; confirmedRef.current = fingerprint(draft.document); retryRef.current = null;
+      if (latestRef.current?.operationId === draft.operationId) {
+        latestRef.current = null;
+        journalQueue.current = journalQueue.current.catch(() => {}).then(() => deleteCanvasDraft(draftKey));
+        await journalQueue.current; setStatus('saved');
+      } else if (latestRef.current) {
+        latestRef.current = { ...latestRef.current, baseRevision: saved.revision }; queueWrite(latestRef.current); schedule(0);
+      }
+    } catch (error) {
+      retryRef.current = draft;
+      if (error instanceof ApiError && error.status === 409) { blockedRef.current = true; setConflict(true); setStatus('conflict'); }
+      else { setStatus('offline'); schedule(3000); }
+    } finally { savingRef.current = false; }
+  }, [draftKey, queueWrite, schedule]);
+  useEffect(() => { pumpRef.current = pump; }, [pump]);
+  useEffect(() => { let active = true; const opening = initialRemote.current.document; if (!opening) return; readCanvasDraft(draftKey).then(draft => { if (!active) return; if (draft && fingerprint(draft.document) !== fingerprint(opening)) { latestRef.current = draft; setChoice('draft'); } else { if (draft) void deleteCanvasDraft(draftKey); setDocument(opening); setChoice('ready'); } }).catch(() => { if (active) { setDocument(opening); setChoice('ready'); setStatus('storage-error'); } }); return () => { active = false; if (timerRef.current) clearTimeout(timerRef.current); unsubscribeRef.current?.(); unsubscribeRef.current = null; }; }, [draftKey]);
+  useEffect(() => { const online = () => { if (status === 'offline') schedule(0); }; window.addEventListener('online', online); return () => window.removeEventListener('online', online); }, [schedule, status]);
+  const ready = useCallback(() => { if (!unsubscribeRef.current) unsubscribeRef.current = useCanvasStore.subscribe(markChanged); markChanged(); }, [markChanged]);
+  const discard = async () => { await journalQueue.current; await deleteCanvasDraft(draftKey); latestRef.current = null; retryRef.current = null; blockedRef.current = false; setConflict(false); revisionRef.current = diagram.revision; if (remote.document) { confirmedRef.current = fingerprint(remote.document); setDocument(remote.document); } setStatus('saved'); setChoice('ready'); };
+  const restore = () => { const draft = latestRef.current; if (!draft) return; try { const migrated = migrateCanvasDocument(draft.document); latestRef.current = { ...draft, document: migrated, baseRevision: diagram.revision, operationId: crypto.randomUUID() }; queueWrite(latestRef.current); setDocument(migrated); setChoice('ready'); setStatus('saving'); schedule(); } catch { setStatus('storage-error'); } };
+  const reloadRemote = async () => { const result = await refetch(); if (!result.data) return; const migrated = migrateCanvasDocument(result.data.document); blockedRef.current = true; await journalQueue.current; await deleteCanvasDraft(draftKey); latestRef.current = null; retryRef.current = null; revisionRef.current = result.data.revision; confirmedRef.current = fingerprint(migrated); setDocument(migrated); setConflict(false); setStatus('saved'); blockedRef.current = false; };
+  const recoverLocal = async () => { const result = await refetch(); if (!result.data || !latestRef.current) return; revisionRef.current = result.data.revision; retryRef.current = null; latestRef.current = { ...latestRef.current, baseRevision: result.data.revision, operationId: crypto.randomUUID() }; queueWrite(latestRef.current); blockedRef.current = false; setConflict(false); schedule(0); };
+  if (remote.error) return <p role="alert" className="p-6 text-red-600">{remote.error}</p>;
+  if (choice === 'checking') return <p role="status" className="p-6">Buscando cambios pendientes…</p>;
+  if (choice === 'draft') return <div className="m-6 max-w-xl rounded-lg border border-border bg-background p-5"><h2 className="font-semibold">Hay cambios sin confirmar</h2><p className="mt-2 text-sm text-outline">Encontramos un borrador local. Puedes recuperarlo sobre la revisión remota {diagram.revision} o descartarlo.</p><div className="mt-4 flex gap-2"><Button variant="primary" onClick={restore}>Recuperar cambios</Button><Button variant="outline" onClick={() => void discard()}>Descartar borrador</Button></div></div>;
+  return <div className="relative h-full w-full"><div role="status" aria-live="polite" className="absolute right-3 top-3 z-40 rounded border border-border bg-background px-2 py-1 text-xs">{{ saved: 'Guardado', saving: 'Guardando…', offline: 'Sin conexión: cambios pendientes', conflict: 'Conflicto de revisión', 'storage-error': 'No se pudo proteger el borrador local' }[status]}</div>{document && <CanvasEditor document={document} onReady={ready} />}{conflict && <div role="dialog" aria-modal="true" aria-labelledby="canvas-conflict-title" className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><div className="max-w-md rounded-lg border border-border bg-background p-5"><h2 id="canvas-conflict-title" className="font-semibold">El diagrama cambió en otra sesión</h2><p className="mt-2 text-sm">Tus cambios locales siguen protegidos. Carga la versión remota o recupera los tuyos sobre ella.</p><div className="mt-4 flex gap-2"><Button onClick={() => void reloadRemote()}>Cargar versión remota</Button><Button variant="primary" onClick={() => void recoverLocal()}>Recuperar mis cambios</Button></div></div></div>}</div>;
+}

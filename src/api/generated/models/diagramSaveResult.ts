@@ -6,18 +6,8 @@
  */
 import type { DiagramDocument } from './diagramDocument';
 
-export interface Diagram {
-  id: string;
-  projectId: string;
-  /**
-     * @minLength 1
-     * @maxLength 120
-     */
-  name: string;
+export interface DiagramSaveResult {
   document: DiagramDocument;
   revision: number;
-  /** @nullable */
-  archivedAt: string | null;
-  createdAt: string;
   updatedAt: string;
 }

@@ -14,11 +14,14 @@ import { initialNodes, initialEdges } from '../mock/initialState';
 interface CanvasState {
     nodes: FlowNode[];
     edges: Edge[];
+    viewport: { x: number; y: number; zoom: number };
     onNodesChange: (changes: NodeChange[]) => void;
     onEdgesChange: (changes: EdgeChange[]) => void;
     onConnect: (connection: Connection) => void;
     addNode: (node: FlowNode) => void;
-    loadDocument: (nodes: FlowNode[], edges: Edge[]) => void;
+    updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
+    loadDocument: (nodes: FlowNode[], edges: Edge[], viewport?: { x: number; y: number; zoom: number }) => void;
+    setViewport: (viewport: { x: number; y: number; zoom: number }) => void;
     updateEdgeData: (edgeId: string, newData: Record<string, unknown>) => void;
     // Función para manejar el agrupamiento
     setNodeParent: (nodeId: string, parentId: string | undefined, position: {x: number, y: number}) => void;
@@ -27,6 +30,7 @@ interface CanvasState {
 export const useCanvasStore = create<CanvasState>((set, get) => ({
     nodes: initialNodes,
     edges: initialEdges,
+    viewport: { x: 0, y: 0, zoom: 1 },
 
     onNodesChange: (changes) => {
         set({ nodes: applyNodeChanges(changes, get().nodes) });
@@ -52,8 +56,10 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     addNode: (node) => {
         set({ nodes: [...get().nodes, node] });
     },
+    updateNodeData: (nodeId, data) => set({ nodes: get().nodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node) }),
 
-    loadDocument: (nodes, edges) => set({ nodes, edges }),
+    loadDocument: (nodes, edges, viewport) => set({ nodes, edges, ...(viewport ? { viewport } : {}) }),
+    setViewport: viewport => set({ viewport }),
 
     updateEdgeData: (edgeId, newData) => {
         set({

@@ -47,9 +47,11 @@ const edgeTypes = {
     editable: EditableEdge,
 };
 
-function CanvasCore() {
+function CanvasCore({ viewport }: { viewport?: DiagramDocument['viewport'] }) {
     const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, setNodeParent } = useCanvasStore();
-    const { screenToFlowPosition, getIntersectingNodes } = useReactFlow();
+    const { screenToFlowPosition, getIntersectingNodes, setViewport } = useReactFlow();
+    const saveViewport = useCanvasStore(state => state.setViewport);
+    useEffect(() => { if (viewport) void setViewport(viewport); }, [viewport, setViewport]);
 
     const connectingNodeId = useRef<string | null>(null);
 
@@ -164,8 +166,9 @@ function CanvasCore() {
                 onPaneClick={onPaneClick}
                 onPaneContextMenu={onPaneContextMenu}
                 onNodeDragStop={onNodeDragStop}
+                onMoveEnd={(_, next) => saveViewport(next)}
                 proOptions={{ hideAttribution: true }}
-                fitView
+                fitView={!viewport}
                 className="bg-background"
                 minZoom={0.1}
             >
@@ -218,13 +221,13 @@ function CanvasCore() {
     );
 }
 
-export function CanvasEditor({ document }: { document?: DiagramDocument }) {
+export function CanvasEditor({ document, onReady }: { document?: DiagramDocument; onReady?: () => void }) {
     const loadDocument = useCanvasStore(state => state.loadDocument);
-    useEffect(() => { if (document) loadDocument(document.nodes, document.edges); }, [document, loadDocument]);
+    useEffect(() => { if (document) { loadDocument(document.nodes, document.edges, document.viewport); onReady?.(); } }, [document, loadDocument, onReady]);
     return (
         <div className="w-full h-full relative">
             <ReactFlowProvider>
-                <CanvasCore />
+                <CanvasCore viewport={document?.viewport} />
                 <CanvasToolbar />
             </ReactFlowProvider>
         </div>

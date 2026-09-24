@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { cn } from '../../../lib/utils';
+import { useCanvasStore } from '../../../store/useCanvasStore';
 
 // Definimos los datos del nodo
 export type TextNodeData = {
@@ -10,10 +10,9 @@ export type TextNodeData = {
 
 export type TextNodeType = Node<TextNodeData, 'text'>;
 
-export function TextNode({ data, selected }: NodeProps<TextNodeType>) {
-    // Para la Fase 1, manejamos la edición de texto con estado local para mantener los 60 FPS
-    // En la Fase 2, al perder el foco (onBlur), guardaríamos esto en la base de datos
-    const [text, setText] = useState(data.text);
+export function TextNode({ id, data, selected }: NodeProps<TextNodeType>) {
+    const updateNodeData = useCanvasStore(state => state.updateNodeData);
+    const text = data.text ?? '';
 
     // Calculamos las filas de la caja de texto basándonos en los saltos de línea
     const rows = text.split('\n').length;
@@ -26,7 +25,7 @@ export function TextNode({ data, selected }: NodeProps<TextNodeType>) {
             <textarea
                 autoFocus={!data.text} // <--- ¡Esta es la magia UX! Si está vacío, enfoca.
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => updateNodeData(id, { text: e.target.value })}
                 placeholder={data.placeholder || "Escribe algo..."}
                 rows={Math.max(1, rows)}
                 className="w-full bg-transparent resize-none outline-none text-on-background font-sans text-base leading-relaxed nodrag nopan overflow-hidden"

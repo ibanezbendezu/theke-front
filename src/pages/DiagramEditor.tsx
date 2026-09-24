@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { useDiagram } from '../data/useDiagrams';
+import { DiagramWorkspace } from './DiagramWorkspace';
 import { CanvasEditor } from '../features/canvas/CanvasEditor';
 
 export function DiagramEditor() {
@@ -21,7 +22,7 @@ export function DiagramEditor() {
         <Button size="icon" title={rightOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'} aria-label={rightOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'} icon={rightOpen ? PanelRightClose : PanelRightOpen} onClick={() => setRightOpen(value => !value)} />
       </nav>
       {leftOpen && <aside className="w-56 shrink-0 overflow-auto border-r border-border p-3" aria-label="Recursos"><h2 className="text-sm font-semibold">Recursos</h2><p className="mt-2 text-xs text-outline">Arrastra recursos al lienzo para crear nodos.</p></aside>}
-      <section className="min-w-0 flex-1" aria-label="Lienzo"><CanvasEditor document={diagram.data.document} /></section>
+      <section className="min-w-0 flex-1" aria-label="Lienzo">{diagram.data.archivedAt ? <div className="relative h-full"><div className="pointer-events-none h-full"><CanvasEditor document={diagram.data.document} /></div><p role="status" className="absolute right-3 top-3 rounded border border-border bg-background px-3 py-2 text-sm">Diagrama archivado. Restáuralo desde el proyecto para editar.</p></div> : <DiagramWorkspace diagram={diagram.data} refetch={diagram.refetch} />}</section>
       {rightOpen && <aside className="w-[304px] shrink-0 overflow-auto border-l border-border p-3" aria-label="Propiedades"><h2 className="text-sm font-semibold">Propiedades</h2><p className="mt-2 text-xs text-outline">Selecciona un elemento para editarlo.</p></aside>}
     </div>
   </main>;
