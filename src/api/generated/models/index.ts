@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './accessibilityInput';
 export * from './account';
 export * from './apiError';
 export * from './apiErrorResponse';
@@ -12,9 +13,13 @@ export * from './badRequestResponse';
 export * from './folder';
 export * from './folderInput';
 export * from './folderResponse';
+export * from './getResourceAccessMode';
+export * from './getResourceAccessParams';
 export * from './listNotesParams';
 export * from './listProjectsParams';
 export * from './listProjectsStatus';
+export * from './listResourcesParams';
+export * from './listResourcesType';
 export * from './me';
 export * from './membership';
 export * from './membershipRole';
@@ -35,7 +40,16 @@ export * from './projectListResponseMeta';
 export * from './projectResource';
 export * from './projectResourceListResponse';
 export * from './projectResponse';
+export * from './resource';
+export * from './resourceAccess';
+export * from './resourceAccessMode';
+export * from './resourceAccessResponse';
+export * from './resourceListResponse';
+export * from './resourceListResponseMeta';
 export * from './resourcePlacementInput';
+export * from './resourceResponse';
+export * from './resourceStatus';
+export * from './resourceType';
 export * from './unauthorizedResponse';
 export * from './upload';
 export * from './uploadIntent';

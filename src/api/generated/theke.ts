@@ -5,12 +5,15 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
+  AccessibilityInput,
   ApiErrorResponse,
   BadRequestResponse,
   FolderInput,
   FolderResponse,
+  GetResourceAccessParams,
   ListNotesParams,
   ListProjectsParams,
+  ListResourcesParams,
   MeResponse,
   NotFoundResponse,
   NoteInput,
@@ -21,7 +24,10 @@ import type {
   ProjectListResponse,
   ProjectResourceListResponse,
   ProjectResponse,
+  ResourceAccessResponse,
+  ResourceListResponse,
   ResourcePlacementInput,
+  ResourceResponse,
   UnauthorizedResponse,
   UploadIntent,
   UploadListResponse,
@@ -1119,5 +1125,221 @@ export const cancelUpload = async (id: string, options?: Parameters<typeof theke
     method: 'POST'
 
 
+  }
+);}
+
+
+
+export type listResourcesResponse200 = {
+  data: ResourceListResponse
+  status: 200
+}
+
+export type listResourcesResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type listResourcesResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type listResourcesResponseSuccess = (listResourcesResponse200) & {
+  headers: Headers;
+};
+export type listResourcesResponseError = (listResourcesResponse400 | listResourcesResponse401) & {
+  headers: Headers;
+};
+
+export type listResourcesResponse = (listResourcesResponseSuccess | listResourcesResponseError)
+
+export const getListResourcesUrl = (params?: ListResourcesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/resources?${stringifiedParams}` : `/v1/resources`
+}
+
+export const listResources = async (params?: ListResourcesParams, options?: Parameters<typeof thekeFetch>[1]): Promise<listResourcesResponse> => {
+
+  return thekeFetch<listResourcesResponse>(getListResourcesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type getResourceResponse200 = {
+  data: ResourceResponse
+  status: 200
+}
+
+export type getResourceResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type getResourceResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getResourceResponseSuccess = (getResourceResponse200) & {
+  headers: Headers;
+};
+export type getResourceResponseError = (getResourceResponse401 | getResourceResponse404) & {
+  headers: Headers;
+};
+
+export type getResourceResponse = (getResourceResponseSuccess | getResourceResponseError)
+
+export const getGetResourceUrl = (id: string,) => {
+
+
+
+
+  return `/v1/resources/${id}`
+}
+
+export const getResource = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<getResourceResponse> => {
+
+  return thekeFetch<getResourceResponse>(getGetResourceUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type getResourceAccessResponse200 = {
+  data: ResourceAccessResponse
+  status: 200
+}
+
+export type getResourceAccessResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type getResourceAccessResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getResourceAccessResponseSuccess = (getResourceAccessResponse200) & {
+  headers: Headers;
+};
+export type getResourceAccessResponseError = (getResourceAccessResponse401 | getResourceAccessResponse404) & {
+  headers: Headers;
+};
+
+export type getResourceAccessResponse = (getResourceAccessResponseSuccess | getResourceAccessResponseError)
+
+export const getGetResourceAccessUrl = (id: string,
+    params?: GetResourceAccessParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/resources/${id}/access?${stringifiedParams}` : `/v1/resources/${id}/access`
+}
+
+export const getResourceAccess = async (id: string,
+    params?: GetResourceAccessParams, options?: Parameters<typeof thekeFetch>[1]): Promise<getResourceAccessResponse> => {
+
+  return thekeFetch<getResourceAccessResponse>(getGetResourceAccessUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type updateResourceAccessibilityResponse200 = {
+  data: ResourceResponse
+  status: 200
+}
+
+export type updateResourceAccessibilityResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type updateResourceAccessibilityResponse401 = {
+  data: UnauthorizedResponse
+  status: 401
+}
+
+export type updateResourceAccessibilityResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type updateResourceAccessibilityResponseSuccess = (updateResourceAccessibilityResponse200) & {
+  headers: Headers;
+};
+export type updateResourceAccessibilityResponseError = (updateResourceAccessibilityResponse400 | updateResourceAccessibilityResponse401 | updateResourceAccessibilityResponse404) & {
+  headers: Headers;
+};
+
+export type updateResourceAccessibilityResponse = (updateResourceAccessibilityResponseSuccess | updateResourceAccessibilityResponseError)
+
+export const getUpdateResourceAccessibilityUrl = (id: string,) => {
+
+
+
+
+  return `/v1/resources/${id}/accessibility`
+}
+
+export const updateResourceAccessibility = async (id: string,
+    accessibilityInput: AccessibilityInput, options?: Parameters<typeof thekeFetch>[1]): Promise<updateResourceAccessibilityResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<updateResourceAccessibilityResponse>(getUpdateResourceAccessibilityUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(accessibilityInput)
   }
 );}

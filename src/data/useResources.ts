@@ -1,0 +1,13 @@
+import { useAuth } from '@clerk/clerk-react';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { thekeFetch } from '../api/httpClient';
+
+export interface ResourceSummary { id: string; title: string; description: string | null; type: 'note' | 'file'; mediaType: string | null; byteSize: number | null; origin: string; status: 'ready'; updatedAt: string; accessibilityText: string | null; accessibilityRequired: boolean; accessibilityMissing: boolean }
+export interface ResourceDetail extends ResourceSummary { content?: string }
+interface Page { data: ResourceSummary[]; meta: { nextCursor: string | null } }
+interface Envelope<T> { data: T }
+function useRequest() { const { getToken } = useAuth(); return async <T>(path: string, options?: RequestInit) => { const token = await getToken(); const response = await thekeFetch<{ data: Envelope<T> }>(path, { ...options, headers: { Authorization: `Bearer ${token}`, ...(options?.body ? { 'Content-Type': 'application/json' } : {}) } }); return response.data.data; }; }
+export function useResources() { const { userId } = useAuth(); const request = useRequest(); return useInfiniteQuery({ queryKey: ['private', 'resources', userId], enabled: Boolean(userId), initialPageParam: '', queryFn: ({ pageParam }) => request<Page>(`/v1/resources${pageParam ? `?cursor=${encodeURIComponent(pageParam)}` : ''}`), getNextPageParam: page => page.meta.nextCursor ?? undefined }); }
+export function useResource(id?: string) { const request = useRequest(); return useQuery({ queryKey: ['private', 'resource', id], enabled: Boolean(id), queryFn: () => request<ResourceDetail>(`/v1/resources/${id}`) }); }
+export function useResourceAccess(id: string, enabled: boolean) { const request = useRequest(); return useQuery({ queryKey: ['private', 'resource-access', id, 'inline'], enabled, staleTime: 240_000, queryFn: () => request<{ url: string }>(`/v1/resources/${id}/access?mode=inline`) }); }
+export function useResourceActions() { const request = useRequest(); const client = useQueryClient(); const refresh = () => { void client.invalidateQueries({ queryKey: ['private', 'resources'] }); void client.invalidateQueries({ queryKey: ['private', 'resource'] }); }; return { access: (id: string, mode: 'inline' | 'download') => request<{ url: string }>(`/v1/resources/${id}/access?mode=${mode}`), accessibility: useMutation({ mutationFn: ({ id, text }: { id: string; text: string }) => request<ResourceDetail>(`/v1/resources/${id}/accessibility`, { method: 'PATCH', body: JSON.stringify({ text }) }), onSuccess: refresh }) }; }
