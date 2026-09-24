@@ -1,0 +1,35 @@
+import { describe, expect, it } from 'vitest';
+import { useCanvasStore } from '../src/store/useCanvasStore';
+
+describe('anotaciones locales', () => {
+  it('crea texto, forma y línea sin recursos ni relaciones, y deshace cambios', () => {
+    useCanvasStore.setState({ nodes: [], edges: [], past: [], future: [], gestureSnapshot: null });
+    const store = useCanvasStore.getState();
+    const textId = store.addAnnotation('text', { x: 20, y: 30 });
+    const shapeId = store.addAnnotation('shape', { x: 200, y: 30 });
+    const lineId = store.addAnnotation('line', { x: 200, y: 240 });
+    const nodes = useCanvasStore.getState().nodes;
+    expect(nodes.map(node => node.type)).toEqual(['annotation', 'annotation', 'annotation']);
+    expect(nodes.map(node => node.data.kind)).toEqual(['text', 'shape', 'line']);
+    expect(nodes.every(node => !('resourceId' in node.data))).toBe(true);
+    expect(useCanvasStore.getState().edges).toHaveLength(0);
+    store.updateNodeData(textId, { text: 'Idea', fontSize: 20, align: 'center', color: 'primary' });
+    store.updateNodeData(lineId, { x1: 0, y1: 100, x2: 100, y2: 0, thickness: 5, dash: 'dashed' });
+    store.updateNodeSize(shapeId, 320, 180);
+    const copyId = store.duplicateNode(textId)!;
+    expect(useCanvasStore.getState().nodes.find(node => node.id === copyId)?.data.text).toBe('Idea');
+    store.removeNodes([copyId]); expect(useCanvasStore.getState().nodes.find(node => node.id === copyId)).toBeUndefined();
+    store.undo(); expect(useCanvasStore.getState().nodes.find(node => node.id === copyId)).toBeDefined();
+    store.redo(); expect(useCanvasStore.getState().nodes.find(node => node.id === copyId)).toBeUndefined();
+  });
+  it('registra un movimiento como una sola operación', () => {
+    useCanvasStore.setState({ nodes: [], edges: [], past: [], future: [], gestureSnapshot: null });
+    const store = useCanvasStore.getState(); const id = store.addAnnotation('shape', { x: 10, y: 10 });
+    const count = useCanvasStore.getState().past.length;
+    store.beginGesture();
+    store.onNodesChange([{ id, type: 'position', position: { x: 20, y: 20 } }, { id, type: 'position', position: { x: 30, y: 30 } }]);
+    store.endGesture();
+    expect(useCanvasStore.getState().past).toHaveLength(count + 1);
+    store.undo(); expect(useCanvasStore.getState().nodes.find(node => node.id === id)?.position).toEqual({ x: 10, y: 10 });
+  });
+});

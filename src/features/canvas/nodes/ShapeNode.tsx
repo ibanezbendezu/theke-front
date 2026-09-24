@@ -1,6 +1,7 @@
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { NodeResizer } from '@xyflow/react';
 import { cn } from '../../../lib/utils';
+import { useCanvasStore } from '../../../store/useCanvasStore';
 
 export type ShapeNodeData = {
     shapeType: 'rectangle' | 'circle' | 'polygon' | 'line';
@@ -12,6 +13,8 @@ export type ShapeNodeData = {
 export type ShapeNodeType = Node<ShapeNodeData, 'shape'>;
 
 export function ShapeNode({ data, selected, width = 100, height = 100 }: NodeProps<ShapeNodeType>) {
+    const beginGesture = useCanvasStore(state => state.beginGesture);
+    const endGesture = useCanvasStore(state => state.endGesture);
     const { shapeType, sides = 3, borderRadius = 8, color = 'var(--color-surface)' } = data;
 
     // Función matemática para dibujar polígonos de N caras (ej. Triángulo)
@@ -39,6 +42,8 @@ export function ShapeNode({ data, selected, width = 100, height = 100 }: NodePro
                 isVisible={selected}
                 minWidth={20}
                 minHeight={shapeType === 'line' ? 4 : 20}
+                onResizeStart={beginGesture}
+                onResizeEnd={endGesture}
             />
 
             <div

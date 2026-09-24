@@ -14,9 +14,8 @@ import {
     Type,
     Image as ImageIcon,
     Square,
-    Link as LinkIcon,
     FileText,
-    Music,
+    Minus,
     UploadCloud,
     Layers
 } from 'lucide-react';
@@ -32,6 +31,7 @@ import { AudioNode } from './nodes/AudioNode';
 import { GroupNode } from './nodes/GroupNode';
 import { ResourceNode } from './nodes/ResourceNode';
 import { FolderNode } from './nodes/FolderNode';
+import { AnnotationNode } from './nodes/AnnotationNode';
 import type { DiagramDocument } from '../../data/useDiagrams';
 
 const nodeTypes: NodeTypes = {
@@ -44,6 +44,7 @@ const nodeTypes: NodeTypes = {
     audio: AudioNode,
     resource: ResourceNode,
     folder: FolderNode,
+    annotation: AnnotationNode,
 };
 
 const edgeTypes = {
@@ -51,7 +52,7 @@ const edgeTypes = {
 };
 
 function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPickFiles }: { viewport?: DiagramDocument['viewport']; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void }) {
-    const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, setNodeParent } = useCanvasStore();
+    const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addAnnotation, setNodeParent, beginGesture, endGesture } = useCanvasStore();
     const { screenToFlowPosition, getIntersectingNodes, setViewport, setCenter } = useReactFlow();
     const saveViewport = useCanvasStore(state => state.setViewport);
     const focusRequest = useCanvasStore(state => state.focusRequest);
@@ -67,9 +68,9 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
         setMenu((m) => ({ ...m, isOpen: false }));
         setContextMenu(null);
         if (event.detail === 2) {
-            addNode({ id: crypto.randomUUID(), type: 'text', position: screenToFlowPosition({ x: event.clientX, y: event.clientY }), data: { text: '' } });
+            addAnnotation('text', screenToFlowPosition({ x: event.clientX, y: event.clientY }));
         }
-    }, [screenToFlowPosition, addNode]);
+    }, [screenToFlowPosition, addAnnotation]);
 
     const onPaneContextMenu = useCallback((event: React.MouseEvent | MouseEvent) => {
         event.preventDefault();
@@ -94,17 +95,18 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
         const nodeAbs = getAbs(node);
 
         if (dropContainer) {
-            if (node.parentId === dropContainer.id) return;
-            const containerAbs = getAbs(dropContainer);
-
-            setNodeParent(node.id, dropContainer.id, {
-                x: nodeAbs.x - containerAbs.x,
-                y: nodeAbs.y - containerAbs.y
-            });
+            if (node.parentId !== dropContainer.id) {
+                const containerAbs = getAbs(dropContainer);
+                setNodeParent(node.id, dropContainer.id, {
+                    x: nodeAbs.x - containerAbs.x,
+                    y: nodeAbs.y - containerAbs.y
+                });
+            }
         } else if (node.parentId) {
             setNodeParent(node.id, undefined, nodeAbs);
         }
-    }, [getIntersectingNodes, setNodeParent]);
+        endGesture();
+    }, [getIntersectingNodes, setNodeParent, endGesture]);
 
     const onConnectStart: OnConnectStart = useCallback((_, { nodeId }) => {
         connectingNodeId.current = nodeId;
@@ -169,6 +171,7 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
                 onConnectEnd={onConnectEnd}
                 onPaneClick={onPaneClick}
                 onPaneContextMenu={onPaneContextMenu}
+                onNodeDragStart={beginGesture}
                 onNodeDragStop={onNodeDragStop}
                 onMoveEnd={(_, next) => saveViewport(next)}
                 proOptions={{ hideAttribution: true }}
@@ -194,15 +197,13 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
                     </button>}
                     {onAddResource && <button onClick={() => { onAddResource(contextMenu.flowPosition); setContextMenu(null); }} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md"><FileText size={16}/> Añadir recurso</button>}
                     <div className="h-px bg-border my-1.5 mx-2" />
-                    <button onClick={() => handleCreateNode('text', contextMenu.flowPosition)} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><Type size={16} className="text-outline" /> Texto</button>
+                    <button onClick={() => { addAnnotation('text', contextMenu.flowPosition); setContextMenu(null); }} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><Type size={16} className="text-outline" /> Texto visual</button>
+                    <button onClick={() => { addAnnotation('shape', contextMenu.flowPosition); setContextMenu(null); }} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><Square size={16} className="text-outline" /> Forma visual</button>
+                    <button onClick={() => { addAnnotation('line', contextMenu.flowPosition); setContextMenu(null); }} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><Minus size={16} className="text-outline" /> Línea visual</button>
 
                     {/* CORRECCIÓN: El botón dispara la orden 'container' */}
                     <button onClick={() => handleCreateNode('container', contextMenu.flowPosition)} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><Layers size={16} className="text-outline" /> Contenedor / Grupo</button>
 
-                    <button onClick={() => handleCreateNode('shape', contextMenu.flowPosition)} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><Square size={16} className="text-outline" /> Figura (Dibujo)</button>
-                    <button onClick={() => handleCreateNode('link', contextMenu.flowPosition)} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><LinkIcon size={16} className="text-outline" /> Bookmark (Web)</button>
-                    <button onClick={() => handleCreateNode('document', contextMenu.flowPosition)} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><FileText size={16} className="text-outline" /> Documento</button>
-                    <button onClick={() => handleCreateNode('audio', contextMenu.flowPosition)} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><Music size={16} className="text-outline" /> Audio</button>
                 </div>
             )}
 
@@ -213,8 +214,20 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
 export function CanvasEditor({ document, onReady, onAddResource, onDropResource, onDropFiles, onPickFiles }: { document?: DiagramDocument; onReady?: () => void; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void }) {
     const loadDocument = useCanvasStore(state => state.loadDocument);
     useEffect(() => { if (document) { loadDocument(document.nodes, document.edges, document.viewport); onReady?.(); } }, [document, loadDocument, onReady]);
+    const onShortcut = (event: React.KeyboardEvent) => {
+        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || (event.target as HTMLElement).isContentEditable) return;
+        const store = useCanvasStore.getState(); const key = event.key.toLowerCase(); const modifier = event.ctrlKey || event.metaKey;
+        if (modifier && key === 'z') { event.preventDefault(); if (event.shiftKey) store.redo(); else store.undo(); return; }
+        if (modifier && key === 'y') { event.preventDefault(); store.redo(); return; }
+        if (modifier && key === 'd') { const selected = store.nodes.find(node => node.selected && node.type === 'annotation'); if (selected) { event.preventDefault(); store.duplicateNode(selected.id); } return; }
+        if (event.key === 'Delete' || event.key === 'Backspace') { const selected = store.nodes.filter(node => node.selected && node.type === 'annotation'); if (selected.length) { event.preventDefault(); store.removeNodes(selected.map(node => node.id)); } return; }
+        if (modifier || event.altKey) return;
+        if (key === 'a' && onAddResource) { event.preventDefault(); onAddResource(); }
+        else if (key === 'u' && onPickFiles) { event.preventDefault(); onPickFiles(); }
+        else if (onAddResource && ['t', 's', 'l'].includes(key)) { event.preventDefault(); store.addAnnotation(key === 't' ? 'text' : key === 's' ? 'shape' : 'line'); }
+    };
     return (
-        <div className="w-full h-full relative" tabIndex={0} onKeyDown={event => { if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return; if (event.key.toLowerCase() === 'a' && onAddResource) { event.preventDefault(); onAddResource(); } if (event.key.toLowerCase() === 'u' && onPickFiles) { event.preventDefault(); onPickFiles(); } }}>
+        <div className="w-full h-full relative" tabIndex={0} onKeyDown={onShortcut}>
             <ReactFlowProvider>
                 <CanvasCore viewport={document?.viewport} onAddResource={onAddResource} onDropResource={onDropResource} onDropFiles={onDropFiles} onPickFiles={onPickFiles} />
                 <CanvasToolbar onAddResource={onAddResource} />

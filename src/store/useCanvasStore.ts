@@ -12,14 +12,27 @@ import {
 import { initialNodes, initialEdges } from '../mock/initialState';
 import { placeResource } from '../features/canvas/placeResource';
 
+type CanvasSnapshot = { nodes: FlowNode[]; edges: Edge[]; viewport: { x: number; y: number; zoom: number } };
+const snapshot = (state: CanvasState): CanvasSnapshot => structuredClone({ nodes: state.nodes, edges: state.edges, viewport: state.viewport });
+const history = (state: CanvasState) => state.gestureSnapshot ? {} : { past: [...state.past, snapshot(state)].slice(-50), future: [] };
+
 interface CanvasState {
     nodes: FlowNode[];
     edges: Edge[];
     viewport: { x: number; y: number; zoom: number };
+    past: CanvasSnapshot[];
+    future: CanvasSnapshot[];
+    gestureSnapshot: CanvasSnapshot | null;
+    beginGesture: () => void;
+    endGesture: () => void;
+    undo: () => void;
+    redo: () => void;
     onNodesChange: (changes: NodeChange[]) => void;
     onEdgesChange: (changes: EdgeChange[]) => void;
     onConnect: (connection: Connection) => void;
     addNode: (node: FlowNode) => void;
+    addAnnotation: (kind: 'text' | 'shape' | 'line', preferred?: { x: number; y: number }) => string;
+    duplicateNode: (id: string) => string | null;
     addResourceRepresentation: (resourceId: string, preferred?: { x: number; y: number }) => string;
     addFolderRepresentation: (folderId: string, projectId: string, preferred?: { x: number; y: number }) => string;
     addUploadedResource: (resourceId: string, batchId: string, preferred: { x: number; y: number }, total: number) => string[];
@@ -33,6 +46,7 @@ interface CanvasState {
     setInspectorOpen: (open: boolean) => void;
     openCanvasNode: (id: string) => void;
     updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
+    updateNodeSize: (nodeId: string, width: number, height: number) => void;
     loadDocument: (nodes: FlowNode[], edges: Edge[], viewport?: { x: number; y: number; zoom: number }) => void;
     setViewport: (viewport: { x: number; y: number; zoom: number }) => void;
     updateEdgeData: (edgeId: string, newData: Record<string, unknown>) => void;
@@ -44,16 +58,17 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     nodes: initialNodes,
     edges: initialEdges,
     viewport: { x: 0, y: 0, zoom: 1 },
+    past: [], future: [], gestureSnapshot: null,
+    beginGesture: () => set(state => state.gestureSnapshot ? state : { gestureSnapshot: snapshot(state) }),
+    endGesture: () => set(state => { const before = state.gestureSnapshot; if (!before) return state; const changed = JSON.stringify(before.nodes) !== JSON.stringify(state.nodes) || JSON.stringify(before.edges) !== JSON.stringify(state.edges); return { gestureSnapshot: null, ...(changed ? { past: [...state.past, before].slice(-50), future: [] } : {}) }; }),
+    undo: () => set(state => { const previous = state.past.at(-1); if (!previous) return state; return { ...structuredClone(previous), past: state.past.slice(0, -1), future: [snapshot(state), ...state.future].slice(0, 50), gestureSnapshot: null }; }),
+    redo: () => set(state => { const next = state.future[0]; if (!next) return state; return { ...structuredClone(next), past: [...state.past, snapshot(state)].slice(-50), future: state.future.slice(1), gestureSnapshot: null }; }),
     focusRequest: null,
     inspectorOpen: true,
 
-    onNodesChange: (changes) => {
-        set({ nodes: applyNodeChanges(changes, get().nodes) });
-    },
+    onNodesChange: changes => set(state => ({ ...(changes.some(change => change.type !== 'select' && change.type !== 'dimensions') ? history(state) : {}), nodes: applyNodeChanges(changes, state.nodes) })),
 
-    onEdgesChange: (changes) => {
-        set({ edges: applyEdgeChanges(changes, get().edges) });
-    },
+    onEdgesChange: changes => set(state => ({ ...(changes.some(change => change.type !== 'select') ? history(state) : {}), edges: applyEdgeChanges(changes, state.edges) })),
 
     onConnect: (connection) => {
         const newEdge: Edge = {
@@ -65,25 +80,31 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
             type: 'editable',
             data: { label: '', controlPoint: null },
         };
-        set({ edges: addEdge(newEdge, get().edges) });
+        set(state => ({ ...history(state), edges: addEdge(newEdge, state.edges) }));
     },
 
-    addNode: (node) => {
-        set({ nodes: [...get().nodes, node] });
+    addNode: node => set(state => ({ ...history(state), nodes: [...state.nodes, node] })),
+    addAnnotation: (kind, preferred) => {
+        const id = crypto.randomUUID(); const viewport = get().viewport;
+        const position = preferred ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom };
+        const data = kind === 'text' ? { kind, text: '', fontSize: 16, align: 'left', color: 'default' } : kind === 'line' ? { kind, color: 'default', thickness: 3, dash: 'solid' } : { kind, shape: 'rectangle', color: 'default', thickness: 2, dash: 'solid' };
+        set(state => ({ ...history(state), nodes: [...state.nodes.map(node => ({ ...node, selected: false })), { id, type: 'annotation', position, width: kind === 'line' ? 220 : 240, height: kind === 'line' ? 40 : kind === 'text' ? 100 : 160, data, selected: true }] }));
+        return id;
     },
+    duplicateNode: id => { const node = get().nodes.find(item => item.id === id); if (!node) return null; const copyId = crypto.randomUUID(); const copy = { ...structuredClone(node), id: copyId, position: { x: node.position.x + 24, y: node.position.y + 24 }, selected: true }; set(state => ({ ...history(state), nodes: [...state.nodes.map(item => ({ ...item, selected: false })), copy] })); return copyId; },
     addResourceRepresentation: (resourceId, preferred) => {
         const id = crypto.randomUUID();
         const viewport = get().viewport;
         const origin = preferred ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom };
         const position = placeResource(get().nodes, origin);
-        set({ nodes: [...get().nodes, { id, type: 'resource', position, data: { resourceId }, selected: true }] });
+        set(state => ({ ...history(state), nodes: [...state.nodes, { id, type: 'resource', position, data: { resourceId }, selected: true }] }));
       return id;
     },
     addFolderRepresentation: (folderId, projectId, preferred) => {
         const id = crypto.randomUUID(); const viewport = get().viewport;
         const origin = preferred ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom };
         const position = placeResource(get().nodes, origin);
-        set({ nodes: [...get().nodes, { id, type: 'folder', position, data: { folderId, projectId }, selected: true }] });
+        set(state => ({ ...history(state), nodes: [...state.nodes, { id, type: 'folder', position, data: { folderId, projectId }, selected: true }] }));
         return id;
     },
     addUploadedResource: (resourceId, batchId, preferred, total) => {
@@ -99,33 +120,34 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const id = crypto.randomUUID();
         const group: FlowNode = { id, type: 'container', position: { x: left, y: top }, width: Math.max(350, right - left), height: Math.max(250, bottom - top), data: { label: 'Nuevo Grupo', color: 'var(--color-surface-variant)' }, selected: true };
         const chosenIds = new Set(chosen.map(node => node.id));
-        set({ nodes: [...current.filter(node => !chosenIds.has(node.id)).map(node => ({ ...node, selected: false })), group, ...chosen.map(node => ({ ...node, parentId: id, expandParent: true, position: { x: node.position.x - left, y: node.position.y - top }, selected: false }))] });
+        set(state => ({ ...history(state), nodes: [...current.filter(node => !chosenIds.has(node.id)).map(node => ({ ...node, selected: false })), group, ...chosen.map(node => ({ ...node, parentId: id, expandParent: true, position: { x: node.position.x - left, y: node.position.y - top }, selected: false }))] }));
         return id;
     },
-    ungroupNode: groupId => set(state => { const group = state.nodes.find(node => node.id === groupId && node.type === 'container'); if (!group) return state; return { nodes: state.nodes.filter(node => node.id !== groupId).map(node => node.parentId === groupId ? { ...node, parentId: undefined, expandParent: undefined, position: { x: node.position.x + group.position.x, y: node.position.y + group.position.y } } : node), edges: state.edges.filter(edge => edge.source !== groupId && edge.target !== groupId) }; }),
+    ungroupNode: groupId => set(state => { const group = state.nodes.find(node => node.id === groupId && node.type === 'container'); if (!group) return state; return { ...history(state), nodes: state.nodes.filter(node => node.id !== groupId).map(node => node.parentId === groupId ? { ...node, parentId: undefined, expandParent: undefined, position: { x: node.position.x + group.position.x, y: node.position.y + group.position.y } } : node), edges: state.edges.filter(edge => edge.source !== groupId && edge.target !== groupId) }; }),
     moveNodeToGroup: (nodeId, groupId) => set(state => {
         const nodes = state.nodes; const node = nodes.find(item => item.id === nodeId); const target = groupId ? nodes.find(item => item.id === groupId && item.type === 'container') : undefined;
         if (!node || (groupId && !target) || node.id === groupId || node.type === 'container') return state;
         const priorParent = nodes.find(item => item.id === node.parentId);
         const absolute = { x: node.position.x + (priorParent?.position.x ?? 0), y: node.position.y + (priorParent?.position.y ?? 0) };
         const moved = { ...node, parentId: target?.id, expandParent: target ? true : undefined, position: { x: absolute.x - (target?.position.x ?? 0), y: absolute.y - (target?.position.y ?? 0) } };
-        return { nodes: [...nodes.filter(item => item.id !== nodeId), moved] };
+        return { ...history(state), nodes: [...nodes.filter(item => item.id !== nodeId), moved] };
     }),
-    removeNodes: ids => set(state => ({ nodes: state.nodes.filter(node => !ids.includes(node.id)), edges: state.edges.filter(edge => !ids.includes(edge.source) && !ids.includes(edge.target)) })),
+    removeNodes: ids => set(state => { const removing = new Set(ids); for (let changed = true; changed;) { changed = false; for (const node of state.nodes) if (node.parentId && removing.has(node.parentId) && !removing.has(node.id)) { removing.add(node.id); changed = true; } } return { ...history(state), nodes: state.nodes.filter(node => !removing.has(node.id)), edges: state.edges.filter(edge => !removing.has(edge.source) && !removing.has(edge.target)) }; }),
     focusNode: id => set(state => ({ focusRequest: { id, nonce: crypto.randomUUID() }, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
     setInspectorOpen: inspectorOpen => set({ inspectorOpen }),
     openCanvasNode: id => set(state => ({ inspectorOpen: true, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
-    updateNodeData: (nodeId, data) => set({ nodes: get().nodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node) }),
+    updateNodeData: (nodeId, data) => set(state => ({ ...history(state), nodes: state.nodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node) })),
+    updateNodeSize: (nodeId, width, height) => set(state => ({ ...history(state), nodes: state.nodes.map(node => node.id === nodeId ? { ...node, width: Math.max(40, width), height: Math.max(24, height) } : node) })),
 
-    loadDocument: (nodes, edges, viewport) => set({ nodes, edges, ...(viewport ? { viewport } : {}) }),
+    loadDocument: (nodes, edges, viewport) => set({ nodes, edges, ...(viewport ? { viewport } : {}), past: [], future: [], gestureSnapshot: null }),
     setViewport: viewport => set({ viewport }),
 
     updateEdgeData: (edgeId, newData) => {
-        set({
-            edges: get().edges.map((e) =>
+        set(state => ({ ...history(state),
+            edges: state.edges.map((e) =>
                 e.id === edgeId ? { ...e, data: { ...e.data, ...newData } } : e
             )
-        });
+        }));
     },
 
     setNodeParent: (nodeId, parentId, position) => {
@@ -153,7 +175,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
                 updatedNodes.push(childNode);
             }
 
-            return { nodes: updatedNodes };
+            return { ...history(state), nodes: updatedNodes };
         });
     },
 }));

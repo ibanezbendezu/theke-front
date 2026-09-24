@@ -14,6 +14,8 @@ export type GroupNodeType = Node<GroupNodeData, 'container'>;
 export function GroupNode({ id, data, selected, width = 350, height = 250 }: NodeProps<GroupNodeType>) {
     const updateNodeData = useCanvasStore(state => state.updateNodeData);
     const openCanvasNode = useCanvasStore(state => state.openCanvasNode);
+    const beginGesture = useCanvasStore(state => state.beginGesture);
+    const endGesture = useCanvasStore(state => state.endGesture);
     const { label = 'Nuevo Grupo', color = 'var(--color-surface-variant)' } = data;
 
     return (
@@ -23,6 +25,8 @@ export function GroupNode({ id, data, selected, width = 350, height = 250 }: Nod
                 isVisible={selected}
                 minWidth={250}
                 minHeight={150}
+                onResizeStart={beginGesture}
+                onResizeEnd={endGesture}
             />
 
             <div
