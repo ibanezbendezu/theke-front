@@ -2,6 +2,7 @@ import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
 import { NodeResizer } from '@xyflow/react';
 import { MoreHorizontal, Layers } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { useCanvasStore } from '../../../store/useCanvasStore';
 
 export type GroupNodeData = {
     label?: string;
@@ -10,7 +11,8 @@ export type GroupNodeData = {
 
 export type GroupNodeType = Node<GroupNodeData, 'container'>;
 
-export function GroupNode({ data, selected, width = 350, height = 250 }: NodeProps<GroupNodeType>) {
+export function GroupNode({ id, data, selected, width = 350, height = 250 }: NodeProps<GroupNodeType>) {
+    const updateNodeData = useCanvasStore(state => state.updateNodeData);
     const { label = 'Nuevo Grupo', color = 'var(--color-surface-variant)' } = data;
 
     return (
@@ -43,7 +45,8 @@ export function GroupNode({ data, selected, width = 350, height = 250 }: NodePro
             <div className="absolute top-full left-0 w-full mt-2 px-3 py-2 flex items-center gap-2 border border-border bg-surface/90 backdrop-blur-md rounded-lg shadow-sm z-50">
                 <Layers size={14} className="text-primary flex-shrink-0" />
                 <input
-                    defaultValue={label}
+                    value={label}
+                    onChange={event => updateNodeData(id, { label: event.target.value })}
                     className="bg-transparent text-sm font-medium text-on-background outline-none truncate w-full nodrag"
                     placeholder="Nombre del contenedor..."
                 />

@@ -10,6 +10,7 @@ import {
     type NodeChange,
 } from '@xyflow/react';
 import { initialNodes, initialEdges } from '../mock/initialState';
+import { placeResource } from '../features/canvas/placeResource';
 
 interface CanvasState {
     nodes: FlowNode[];
@@ -19,6 +20,11 @@ interface CanvasState {
     onEdgesChange: (changes: EdgeChange[]) => void;
     onConnect: (connection: Connection) => void;
     addNode: (node: FlowNode) => void;
+    addResourceRepresentation: (resourceId: string, preferred?: { x: number; y: number }) => string;
+    addUploadedResource: (resourceId: string, batchId: string, preferred: { x: number; y: number }, total: number) => string[];
+    removeNodes: (ids: string[]) => void;
+    focusRequest: { id: string; nonce: string } | null;
+    focusNode: (id: string) => void;
     updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
     loadDocument: (nodes: FlowNode[], edges: Edge[], viewport?: { x: number; y: number; zoom: number }) => void;
     setViewport: (viewport: { x: number; y: number; zoom: number }) => void;
@@ -31,6 +37,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     nodes: initialNodes,
     edges: initialEdges,
     viewport: { x: 0, y: 0, zoom: 1 },
+    focusRequest: null,
 
     onNodesChange: (changes) => {
         set({ nodes: applyNodeChanges(changes, get().nodes) });
@@ -56,6 +63,27 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     addNode: (node) => {
         set({ nodes: [...get().nodes, node] });
     },
+    addResourceRepresentation: (resourceId, preferred) => {
+        const id = crypto.randomUUID();
+        const viewport = get().viewport;
+        const origin = preferred ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom };
+        const position = placeResource(get().nodes, origin);
+        set({ nodes: [...get().nodes, { id, type: 'resource', position, data: { resourceId }, selected: true }] });
+        return id;
+    },
+    addUploadedResource: (resourceId, batchId, preferred, total) => {
+        if (total === 1) return [get().addResourceRepresentation(resourceId, preferred)];
+        const groupId = `upload-${batchId}`; const id = crypto.randomUUID(); const current = get().nodes;
+        const group = current.find(node => node.id === groupId);
+        const siblings = current.filter(node => node.parentId === groupId).length;
+        const height = Math.max(250, 40 + total * 136);
+        const groupNode: FlowNode = { id: groupId, type: 'container', position: placeResource(current, preferred, { width: 360, height }), width: 360, height, data: { label: 'Archivos cargados', color: 'var(--color-surface-variant)' } };
+        const child: FlowNode = { id, type: 'resource', parentId: groupId, expandParent: true, position: { x: 32, y: 24 + siblings * 136 }, data: { resourceId }, selected: true };
+        set({ nodes: group ? [...current, child] : [...current, groupNode, child] });
+        return group ? [id] : [groupId, id];
+    },
+    removeNodes: ids => set(state => ({ nodes: state.nodes.filter(node => !ids.includes(node.id)), edges: state.edges.filter(edge => !ids.includes(edge.source) && !ids.includes(edge.target)) })),
+    focusNode: id => set(state => ({ focusRequest: { id, nonce: crypto.randomUUID() }, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
     updateNodeData: (nodeId, data) => set({ nodes: get().nodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node) }),
 
     loadDocument: (nodes, edges, viewport) => set({ nodes, edges, ...(viewport ? { viewport } : {}) }),

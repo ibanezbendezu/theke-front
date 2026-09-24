@@ -1,13 +1,14 @@
 import { useReactFlow } from '@xyflow/react';
-import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, Plus } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
-export function CanvasToolbar() {
+export function CanvasToolbar({ onAddResource }: { onAddResource?: () => void }) {
     // Este hook nos da acceso directo a los controles de la cámara del canvas
     const { zoomIn, zoomOut, fitView } = useReactFlow();
 
     return (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 p-1.5 bg-surface-variant/80 backdrop-blur border border-border rounded-xl shadow-lg">
+            {onAddResource && <><Button variant="ghost" size="sm" icon={Plus} aria-label="Añadir recurso" title="Añadir recurso (A)" onClick={onAddResource} className="w-10 h-10 p-0"/><div className="w-px h-6 bg-border mx-1"/></>}
             <Button
                 variant="ghost"
                 size="sm"

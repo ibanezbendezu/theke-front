@@ -18,7 +18,6 @@ import {
     FileText,
     Music,
     UploadCloud,
-    X,
     Layers
 } from 'lucide-react';
 import { useCanvasStore } from '../../store/useCanvasStore';
@@ -31,6 +30,7 @@ import { LinkNode } from "./nodes/LinkNode";
 import { DocumentNode } from './nodes/DocumentNode';
 import { AudioNode } from './nodes/AudioNode';
 import { GroupNode } from './nodes/GroupNode';
+import { ResourceNode } from './nodes/ResourceNode';
 import type { DiagramDocument } from '../../data/useDiagrams';
 
 const nodeTypes: NodeTypes = {
@@ -41,23 +41,25 @@ const nodeTypes: NodeTypes = {
     container: GroupNode, // Nuestro nodo está mapeado a 'container'
     document: DocumentNode,
     audio: AudioNode,
+    resource: ResourceNode,
 };
 
 const edgeTypes = {
     editable: EditableEdge,
 };
 
-function CanvasCore({ viewport }: { viewport?: DiagramDocument['viewport'] }) {
+function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPickFiles }: { viewport?: DiagramDocument['viewport']; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void }) {
     const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, setNodeParent } = useCanvasStore();
-    const { screenToFlowPosition, getIntersectingNodes, setViewport } = useReactFlow();
+    const { screenToFlowPosition, getIntersectingNodes, setViewport, setCenter } = useReactFlow();
     const saveViewport = useCanvasStore(state => state.setViewport);
+    const focusRequest = useCanvasStore(state => state.focusRequest);
     useEffect(() => { if (viewport) void setViewport(viewport); }, [viewport, setViewport]);
+    useEffect(() => { if (!focusRequest) return; const nodes = useCanvasStore.getState().nodes; const node = nodes.find(item => item.id === focusRequest.id); if (!node) return; let x = node.position.x; let y = node.position.y; let parentId = node.parentId; while (parentId) { const parent = nodes.find(item => item.id === parentId); if (!parent) break; x += parent.position.x; y += parent.position.y; parentId = parent.parentId; } void setCenter(x + (node.width ?? 288) / 2, y + (node.height ?? 112) / 2, { zoom: 1, duration: 300 }); }, [focusRequest, setCenter]);
 
     const connectingNodeId = useRef<string | null>(null);
 
     const [menu, setMenu] = useState<{ isOpen: boolean; x: number; y: number; flowPosition: { x: number; y: number } | null; }>({ isOpen: false, x: 0, y: 0, flowPosition: null });
     const [contextMenu, setContextMenu] = useState<{ isOpen: boolean; x: number; y: number; flowPosition: { x: number; y: number }; } | null>(null);
-    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
     const onPaneClick = useCallback((event: React.MouseEvent) => {
         setMenu((m) => ({ ...m, isOpen: false }));
@@ -152,7 +154,7 @@ function CanvasCore({ viewport }: { viewport?: DiagramDocument['viewport'] }) {
     };
 
     return (
-        <div className="w-full h-full">
+        <div className="w-full h-full" onDragOver={event => { if (event.dataTransfer.types.includes('application/x-theke-resource') || event.dataTransfer.types.includes('Files')) event.preventDefault(); }} onDrop={event => { const id = event.dataTransfer.getData('application/x-theke-resource'); const position = screenToFlowPosition({ x: event.clientX, y: event.clientY }); if (id && onDropResource) { event.preventDefault(); onDropResource(id, position); } else if (event.dataTransfer.files.length && onDropFiles) { event.preventDefault(); onDropFiles([...event.dataTransfer.files], position); } }}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -185,9 +187,10 @@ function CanvasCore({ viewport }: { viewport?: DiagramDocument['viewport'] }) {
 
             {contextMenu && (
                 <div className="fixed z-[100] w-46 bg-background border border-border rounded-lg shadow-xl overflow-hidden flex flex-col" style={{ top: contextMenu.y, left: contextMenu.x }}>
-                    <button onClick={() => { setIsUploadModalOpen(true); setContextMenu(null); }} className="flex items-center gap-3 px-3 py-2.5 text-sm text-on-background font-medium hover:bg-surface-variant rounded-md transition-colors">
+                    {onPickFiles && <button onClick={() => { onPickFiles(contextMenu.flowPosition); setContextMenu(null); }} className="flex items-center gap-3 px-3 py-2.5 text-sm text-on-background font-medium hover:bg-surface-variant rounded-md transition-colors">
                         <div className="p-1.5 bg-primary/10 rounded-md text-primary"><UploadCloud size={16} /></div> Subir archivo...
-                    </button>
+                    </button>}
+                    {onAddResource && <button onClick={() => { onAddResource(contextMenu.flowPosition); setContextMenu(null); }} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md"><FileText size={16}/> Añadir recurso</button>}
                     <div className="h-px bg-border my-1.5 mx-2" />
                     <button onClick={() => handleCreateNode('text', contextMenu.flowPosition)} className="flex items-center gap-2 px-3 py-2 text-sm text-on-background hover:bg-surface-variant rounded-md transition-colors"><Type size={16} className="text-outline" /> Texto</button>
 
@@ -201,34 +204,18 @@ function CanvasCore({ viewport }: { viewport?: DiagramDocument['viewport'] }) {
                 </div>
             )}
 
-            {isUploadModalOpen && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
-                    <div className="bg-background w-full max-w-md rounded-xl shadow-2xl border border-border overflow-hidden flex flex-col">
-                        <div className="flex items-center justify-between p-4 border-b border-border">
-                            <h3 className="font-semibold text-on-background">Subir nuevo recurso</h3>
-                            <button onClick={() => setIsUploadModalOpen(false)} className="text-outline hover:text-on-background p-1 rounded-md hover:bg-surface-variant"><X size={18} /></button>
-                        </div>
-                        <div className="p-6">
-                            <div className="border-2 border-dashed border-border hover:border-primary transition-colors rounded-lg flex flex-col items-center justify-center py-10 px-4 text-center cursor-pointer bg-surface/30">
-                                <div className="p-3 bg-background border border-border rounded-full shadow-sm mb-4"><UploadCloud size={28} className="text-primary" /></div>
-                                <p className="text-sm font-medium text-on-background mb-1">Haz clic o arrastra tu archivo aquí</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
 
-export function CanvasEditor({ document, onReady }: { document?: DiagramDocument; onReady?: () => void }) {
+export function CanvasEditor({ document, onReady, onAddResource, onDropResource, onDropFiles, onPickFiles }: { document?: DiagramDocument; onReady?: () => void; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void }) {
     const loadDocument = useCanvasStore(state => state.loadDocument);
     useEffect(() => { if (document) { loadDocument(document.nodes, document.edges, document.viewport); onReady?.(); } }, [document, loadDocument, onReady]);
     return (
-        <div className="w-full h-full relative">
+        <div className="w-full h-full relative" tabIndex={0} onKeyDown={event => { if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return; if (event.key.toLowerCase() === 'a' && onAddResource) { event.preventDefault(); onAddResource(); } if (event.key.toLowerCase() === 'u' && onPickFiles) { event.preventDefault(); onPickFiles(); } }}>
             <ReactFlowProvider>
-                <CanvasCore viewport={document?.viewport} />
-                <CanvasToolbar />
+                <CanvasCore viewport={document?.viewport} onAddResource={onAddResource} onDropResource={onDropResource} onDropFiles={onDropFiles} onPickFiles={onPickFiles} />
+                <CanvasToolbar onAddResource={onAddResource} />
             </ReactFlowProvider>
         </div>
     );
