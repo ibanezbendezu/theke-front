@@ -23,6 +23,7 @@ Evitar pérdidas accidentales mostrando el impacto real de archivar o eliminar y
 - [x] Archivo/restauración de Recursos con identidad conservada en usos existentes.
 - [x] Eliminación diferida 30 días e idempotente de Recursos sin usos y Proyectos.
 - [x] Confirmación obsoleta rechazada dentro de una transacción serializable.
+- [x] Reintento acotado de la transacción completa ante conflicto serializable PostgreSQL `40001`.
 - [x] Diálogo accesible con foco contenido/restaurado y lenguaje explícito.
 - [x] Contrato, migración, cliente y pruebas focalizadas con PostgreSQL real.
 - [ ] Gate externo del piloto y export ZIP completa, registrado en `deferred-work.md`.

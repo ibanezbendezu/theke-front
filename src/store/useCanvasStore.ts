@@ -23,6 +23,9 @@ interface CanvasState {
     addResourceRepresentation: (resourceId: string, preferred?: { x: number; y: number }) => string;
     addFolderRepresentation: (folderId: string, projectId: string, preferred?: { x: number; y: number }) => string;
     addUploadedResource: (resourceId: string, batchId: string, preferred: { x: number; y: number }, total: number) => string[];
+    groupNodes: (ids: string[]) => string | null;
+    ungroupNode: (groupId: string) => void;
+    moveNodeToGroup: (nodeId: string, groupId?: string) => void;
     removeNodes: (ids: string[]) => void;
     focusRequest: { id: string; nonce: string } | null;
     focusNode: (id: string) => void;
@@ -84,16 +87,30 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         return id;
     },
     addUploadedResource: (resourceId, batchId, preferred, total) => {
-        if (total === 1) return [get().addResourceRepresentation(resourceId, preferred)];
-        const groupId = `upload-${batchId}`; const id = crypto.randomUUID(); const current = get().nodes;
-        const group = current.find(node => node.id === groupId);
-        const siblings = current.filter(node => node.parentId === groupId).length;
-        const height = Math.max(250, 40 + total * 136);
-        const groupNode: FlowNode = { id: groupId, type: 'container', position: placeResource(current, preferred, { width: 360, height }), width: 360, height, data: { label: 'Archivos cargados', color: 'var(--color-surface-variant)' } };
-        const child: FlowNode = { id, type: 'resource', parentId: groupId, expandParent: true, position: { x: 32, y: 24 + siblings * 136 }, data: { resourceId }, selected: true };
-        set({ nodes: group ? [...current, child] : [...current, groupNode, child] });
-        return group ? [id] : [groupId, id];
+        void batchId; void total;
+        return [get().addResourceRepresentation(resourceId, preferred)];
     },
+    groupNodes: ids => {
+        const current = get().nodes; const chosen = current.filter(node => ids.includes(node.id) && !node.parentId && node.type !== 'container');
+        if (chosen.length < 2) return null;
+        const left = Math.min(...chosen.map(node => node.position.x)) - 32; const top = Math.min(...chosen.map(node => node.position.y)) - 32;
+        const right = Math.max(...chosen.map(node => node.position.x + (node.width ?? 288))) + 32;
+        const bottom = Math.max(...chosen.map(node => node.position.y + (node.height ?? 112))) + 32;
+        const id = crypto.randomUUID();
+        const group: FlowNode = { id, type: 'container', position: { x: left, y: top }, width: Math.max(350, right - left), height: Math.max(250, bottom - top), data: { label: 'Nuevo Grupo', color: 'var(--color-surface-variant)' }, selected: true };
+        const chosenIds = new Set(chosen.map(node => node.id));
+        set({ nodes: [...current.filter(node => !chosenIds.has(node.id)).map(node => ({ ...node, selected: false })), group, ...chosen.map(node => ({ ...node, parentId: id, expandParent: true, position: { x: node.position.x - left, y: node.position.y - top }, selected: false }))] });
+        return id;
+    },
+    ungroupNode: groupId => set(state => { const group = state.nodes.find(node => node.id === groupId && node.type === 'container'); if (!group) return state; return { nodes: state.nodes.filter(node => node.id !== groupId).map(node => node.parentId === groupId ? { ...node, parentId: undefined, expandParent: undefined, position: { x: node.position.x + group.position.x, y: node.position.y + group.position.y } } : node), edges: state.edges.filter(edge => edge.source !== groupId && edge.target !== groupId) }; }),
+    moveNodeToGroup: (nodeId, groupId) => set(state => {
+        const nodes = state.nodes; const node = nodes.find(item => item.id === nodeId); const target = groupId ? nodes.find(item => item.id === groupId && item.type === 'container') : undefined;
+        if (!node || (groupId && !target) || node.id === groupId || node.type === 'container') return state;
+        const priorParent = nodes.find(item => item.id === node.parentId);
+        const absolute = { x: node.position.x + (priorParent?.position.x ?? 0), y: node.position.y + (priorParent?.position.y ?? 0) };
+        const moved = { ...node, parentId: target?.id, expandParent: target ? true : undefined, position: { x: absolute.x - (target?.position.x ?? 0), y: absolute.y - (target?.position.y ?? 0) } };
+        return { nodes: [...nodes.filter(item => item.id !== nodeId), moved] };
+    }),
     removeNodes: ids => set(state => ({ nodes: state.nodes.filter(node => !ids.includes(node.id)), edges: state.edges.filter(edge => !ids.includes(edge.source) && !ids.includes(edge.target)) })),
     focusNode: id => set(state => ({ focusRequest: { id, nonce: crypto.randomUUID() }, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
     setInspectorOpen: inspectorOpen => set({ inspectorOpen }),
@@ -113,6 +130,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
     setNodeParent: (nodeId, parentId, position) => {
         set((state) => {
+            const node = state.nodes.find(item => item.id === nodeId);
+            if (!node || node.type === 'container' || nodeId === parentId || (parentId && !state.nodes.some(item => item.id === parentId && item.type === 'container'))) return state;
             // 1. Asignamos el padre y las coordenadas relativas
             const updatedNodes = state.nodes.map((node) => {
                 if (node.id === nodeId) {

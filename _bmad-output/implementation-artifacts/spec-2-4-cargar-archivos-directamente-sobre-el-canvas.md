@@ -13,6 +13,6 @@ Usar la carga segura existente para incorporar archivos al diagrama y a la Bibli
 
 - [x] Aceptar archivos soltados en el Canvas o elegidos por teclado/selector con ubicación inicial.
 - [x] Reutilizar el pipeline de carga y mostrar progreso, errores y reintento por archivo.
-- [x] Crear representaciones canónicas al quedar listas, agrupar lotes múltiples sin relaciones implícitas y mantenerlas seleccionadas.
+- [x] Crear representaciones canónicas al quedar listas, distribuir lotes múltiples sin relaciones implícitas y mantenerlas seleccionadas; agrupar solo por acción explícita.
 - [x] Permitir deshacer solo la incorporación visual y aclarar que los recursos permanecen en la Biblioteca.
 - [x] Verificar cargas exitosas, fallos, reintentos y deshacer con pruebas focalizadas.

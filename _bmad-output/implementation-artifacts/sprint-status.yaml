@@ -44,7 +44,7 @@ development_status:
   2-4-cargar-archivos-directamente-sobre-el-canvas: done
   2-5-interactuar-con-tarjetas-de-recursos-en-el-canvas: done
   2-6-representar-carpetas-sin-desplegar-todos-sus-recursos: done
-  2-7-agrupar-representaciones-visualmente: backlog
+  2-7-agrupar-representaciones-visualmente: done
   2-8-añadir-anotaciones-y-trazos-no-semánticos: backlog
   2-9-personalizar-representaciones-y-fondo: backlog
   2-10-recorrer-y-editar-el-diagrama-sin-depender-del-espacio-visua: backlog

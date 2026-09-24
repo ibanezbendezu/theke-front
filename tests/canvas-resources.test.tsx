@@ -21,8 +21,8 @@ describe('recursos en el canvas', () => {
     expect(placeResource(useCanvasStore.getState().nodes, { x: 0, y: 0 })).not.toEqual({ x: 0, y: 0 });
     const one = store.addUploadedResource('resource-2', 'batch-1', { x: 0, y: 0 }, 2);
     const two = store.addUploadedResource('resource-3', 'batch-1', { x: 0, y: 0 }, 2);
-    const before = useCanvasStore.getState().nodes; expect(before.findIndex(node => node.id === one[0])).toBeLessThan(before.findIndex(node => node.id === one[1]));
-    expect(before.filter(node => node.parentId === one[0])).toHaveLength(2);
+    const before = useCanvasStore.getState().nodes; expect(before.filter(node => node.type === 'container')).toHaveLength(0);
+    expect(before.filter(node => node.parentId)).toHaveLength(0);
     store.removeNodes([...one, ...two]); expect(useCanvasStore.getState().nodes.map(node => node.id)).toEqual([first]);
   });
 });

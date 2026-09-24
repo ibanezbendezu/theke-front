@@ -13,6 +13,7 @@ export type GroupNodeType = Node<GroupNodeData, 'container'>;
 
 export function GroupNode({ id, data, selected, width = 350, height = 250 }: NodeProps<GroupNodeType>) {
     const updateNodeData = useCanvasStore(state => state.updateNodeData);
+    const openCanvasNode = useCanvasStore(state => state.openCanvasNode);
     const { label = 'Nuevo Grupo', color = 'var(--color-surface-variant)' } = data;
 
     return (
@@ -31,7 +32,7 @@ export function GroupNode({ id, data, selected, width = 350, height = 250 }: Nod
                 )}
             >
                 <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1.5 bg-background/90 backdrop-blur border border-border rounded-md text-on-surface-variant hover:text-on-background shadow-sm nodrag nopan">
+                    <button type="button" aria-label="Opciones del grupo" onClick={() => openCanvasNode(id)} className="p-1.5 bg-background/90 backdrop-blur border border-border rounded-md text-on-surface-variant hover:text-on-background shadow-sm nodrag nopan">
                         <MoreHorizontal size={14} />
                     </button>
                 </div>

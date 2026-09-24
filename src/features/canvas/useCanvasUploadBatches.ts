@@ -4,7 +4,7 @@ import { transferUpload } from '../../data/uploadTransfer';
 import { useCanvasStore } from '../../store/useCanvasStore';
 
 interface Entry { id: string; file: File; uploadId?: string; status: string; progress: number; error?: string; represented?: boolean }
-export interface CanvasUploadBatch { id: string; position: { x: number; y: number }; entries: Entry[]; nodeIds: string[]; undone: boolean }
+export interface CanvasUploadBatch { id: string; position: { x: number; y: number }; entries: Entry[]; nodeIds: string[]; groupId?: string; undone: boolean }
 const finished = new Set(['ready', 'rejected', 'failed', 'cancelled']);
 
 export function useCanvasUploadBatches() {
@@ -36,7 +36,8 @@ export function useCanvasUploadBatches() {
     } }, 0);
     return () => clearTimeout(timer);
   }, [api.uploads.data, batches]);
-  const undo = (batchId: string) => { const batch = batches.find(item => item.id === batchId); if (!batch) return; useCanvasStore.getState().removeNodes(batch.nodeIds); setBatches(current => current.map(item => item.id === batchId ? { ...item, undone: true, nodeIds: [] } : item)); };
+  const undo = (batchId: string) => { const batch = batches.find(item => item.id === batchId); if (!batch) return; useCanvasStore.getState().removeNodes([...batch.nodeIds, ...(batch.groupId ? [batch.groupId] : [])]); setBatches(current => current.map(item => item.id === batchId ? { ...item, undone: true, nodeIds: [], groupId: undefined } : item)); };
+  const createGroup = (batchId: string) => { const batch = batches.find(item => item.id === batchId); if (!batch || batch.undone || batch.groupId) return; const groupId = useCanvasStore.getState().groupNodes(batch.nodeIds); if (groupId) setBatches(current => current.map(item => item.id === batchId ? { ...item, groupId } : item)); };
   const retry = (batchId: string, entryId: string) => { const entry = batches.find(item => item.id === batchId)?.entries.find(item => item.id === entryId); if (entry) void start(batchId, entry); };
-  return { batches, addFiles, retry, undo, policy: api.policy };
+  return { batches, addFiles, retry, undo, createGroup, policy: api.policy };
 }
