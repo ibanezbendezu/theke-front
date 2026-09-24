@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ReactFlow,
     Background,
+    BackgroundVariant,
     type NodeTypes,
     ReactFlowProvider,
     useReactFlow,
@@ -55,9 +56,10 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
     const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addAnnotation, setNodeParent, beginGesture, endGesture } = useCanvasStore();
     const { screenToFlowPosition, getIntersectingNodes, setViewport, setCenter } = useReactFlow();
     const saveViewport = useCanvasStore(state => state.setViewport);
+    const background = useCanvasStore(state => state.background);
     const focusRequest = useCanvasStore(state => state.focusRequest);
     useEffect(() => { if (viewport) void setViewport(viewport); }, [viewport, setViewport]);
-    useEffect(() => { if (!focusRequest) return; const nodes = useCanvasStore.getState().nodes; const node = nodes.find(item => item.id === focusRequest.id); if (!node) return; let x = node.position.x; let y = node.position.y; let parentId = node.parentId; while (parentId) { const parent = nodes.find(item => item.id === parentId); if (!parent) break; x += parent.position.x; y += parent.position.y; parentId = parent.parentId; } void setCenter(x + (node.width ?? 288) / 2, y + (node.height ?? 112) / 2, { zoom: 1, duration: 300 }); }, [focusRequest, setCenter]);
+    useEffect(() => { if (!focusRequest) return; const nodes = useCanvasStore.getState().nodes; const node = nodes.find(item => item.id === focusRequest.id); if (!node) return; let x = node.position.x; let y = node.position.y; let parentId = node.parentId; while (parentId) { const parent = nodes.find(item => item.id === parentId); if (!parent) break; x += parent.position.x; y += parent.position.y; parentId = parent.parentId; } void setCenter(x + (node.width ?? 288) / 2, y + (node.height ?? 112) / 2, { zoom: 1, duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300 }); }, [focusRequest, setCenter]);
 
     const connectingNodeId = useRef<string | null>(null);
 
@@ -177,9 +179,10 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
                 proOptions={{ hideAttribution: true }}
                 fitView={!viewport}
                 className="bg-background"
+                style={{ backgroundColor: background.tone === 'surface' ? 'var(--color-surface)' : 'var(--color-background)' }}
                 minZoom={0.1}
             >
-                <Background color="var(--color-border)" gap={24} size={2} />
+                {background.variant !== 'plain' && <Background variant={background.variant === 'grid' ? BackgroundVariant.Lines : BackgroundVariant.Dots} color="var(--color-outline)" gap={24} size={background.variant === 'dots' ? 2 : undefined} />}
             </ReactFlow>
 
             {menu.isOpen && (
@@ -213,7 +216,7 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
 
 export function CanvasEditor({ document, onReady, onAddResource, onDropResource, onDropFiles, onPickFiles }: { document?: DiagramDocument; onReady?: () => void; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void }) {
     const loadDocument = useCanvasStore(state => state.loadDocument);
-    useEffect(() => { if (document) { loadDocument(document.nodes, document.edges, document.viewport); onReady?.(); } }, [document, loadDocument, onReady]);
+    useEffect(() => { if (document) { loadDocument(document.nodes, document.edges, document.viewport, document.background); onReady?.(); } }, [document, loadDocument, onReady]);
     const onShortcut = (event: React.KeyboardEvent) => {
         if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || (event.target as HTMLElement).isContentEditable) return;
         const store = useCanvasStore.getState(); const key = event.key.toLowerCase(); const modifier = event.ctrlKey || event.metaKey;

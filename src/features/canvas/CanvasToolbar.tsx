@@ -22,14 +22,14 @@ export function CanvasToolbar({ onAddResource }: { onAddResource?: () => void })
                 variant="ghost"
                 size="sm"
                 icon={ZoomOut}
-                onClick={() => zoomOut({ duration: 300 })}
+                onClick={() => zoomOut({ duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300 })}
                 className="w-10 h-10 p-0"
             />
             <Button
                 variant="ghost"
                 size="sm"
                 icon={ZoomIn}
-                onClick={() => zoomIn({ duration: 300 })}
+                onClick={() => zoomIn({ duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300 })}
                 className="w-10 h-10 p-0"
             />
             <div className="w-px h-6 bg-border mx-1" />
@@ -37,7 +37,7 @@ export function CanvasToolbar({ onAddResource }: { onAddResource?: () => void })
                 variant="ghost"
                 size="sm"
                 icon={Maximize}
-                onClick={() => fitView({ duration: 500, padding: 0.2 })}
+                onClick={() => fitView({ duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500, padding: 0.2 })}
                 className="w-10 h-10 p-0 text-primary hover:text-primary"
             />
         </div>

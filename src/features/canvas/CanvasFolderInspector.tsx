@@ -3,6 +3,7 @@ import { Button } from '../../components/ui/Button';
 import { useOrganization } from '../../data/useOrganization';
 import { useResources } from '../../data/useResources';
 import { useCanvasStore } from '../../store/useCanvasStore';
+import { CanvasPresentationInspector } from './CanvasPresentationInspector';
 
 export function CanvasFolderInspector({ nodeId, projectId, folderId, caption = '', onAddResource }: { nodeId: string; projectId: string; folderId: string; caption?: string; onAddResource: (id: string) => void }) {
   const organization = useOrganization(projectId);
@@ -22,5 +23,6 @@ export function CanvasFolderInspector({ nodeId, projectId, folderId, caption = '
     <a className="inline-block text-primary underline" href={`/projects/${encodeURIComponent(projectId)}`} target="_blank" rel="noopener noreferrer">Administrar en el proyecto</a>
     {available && <section aria-label="Recursos de la carpeta" className="rounded border border-border p-3"><h3 className="font-medium">Explorar recursos</h3><label className="mt-2 block">Buscar<input type="search" className="mt-1 w-full rounded border border-border bg-background p-2" value={search} onChange={event => setSearch(event.target.value)} /></label>{resources.isPending && <p role="status" className="mt-2">Buscando…</p>}{resources.isError && <p role="alert" className="mt-2">No se pudieron cargar los recursos.</p>}{!resources.isPending && !resources.isError && items.length === 0 && <p className="mt-2 text-outline">No hay recursos en esta carpeta.</p>}<div className="mt-2 space-y-2">{items.map(item => <div key={item.id} className="flex items-center gap-2 border-t border-border pt-2"><span className="min-w-0 flex-1 truncate" title={item.title}>{item.title}</span><Button onClick={() => onAddResource(item.id)}>Añadir</Button></div>)}</div>{resources.hasNextPage && <Button className="mt-3" disabled={resources.isFetchingNextPage} onClick={() => void resources.fetchNextPage()}>Cargar más</Button>}</section>}
     <section aria-label="Propiedades de la representación" className="rounded border border-border p-3"><h3 className="font-medium">Solo en este diagrama</h3><label className="mt-2 block">Etiqueta local<input className="mt-1 w-full rounded border border-border bg-background p-2" value={caption} maxLength={120} onChange={event => updateNodeData(nodeId, { caption: event.target.value })} /></label></section>
+    <CanvasPresentationInspector nodeId={nodeId} />
   </div>;
 }

@@ -4,7 +4,8 @@ import type { Edge, Node } from '@xyflow/react';
 import { thekeFetch } from '../api/httpClient';
 import { useCallback } from 'react';
 
-export interface DiagramDocument { schemaVersion: number; nodes: Node[]; edges: Edge[]; viewport: { x: number; y: number; zoom: number } }
+export interface CanvasBackground { variant: 'plain' | 'dots' | 'grid'; tone: 'default' | 'surface' }
+export interface DiagramDocument { schemaVersion: number; nodes: Node[]; edges: Edge[]; viewport: { x: number; y: number; zoom: number }; background?: CanvasBackground }
 export interface Diagram { id: string; projectId: string; name: string; document: DiagramDocument; revision: number; archivedAt: string | null; createdAt: string; updatedAt: string }
 export type DiagramSummary = Omit<Diagram, 'document'>;
 interface Envelope<T> { data: T }

@@ -4,6 +4,7 @@
  * Theke API
  * OpenAPI spec version: 1.0.0
  */
+import type { DiagramDocumentBackground } from './diagramDocumentBackground';
 import type { DiagramDocumentEdgesItem } from './diagramDocumentEdgesItem';
 import type { DiagramDocumentNodesItem } from './diagramDocumentNodesItem';
 import type { DiagramDocumentViewport } from './diagramDocumentViewport';
@@ -13,4 +14,5 @@ export interface DiagramDocument {
   nodes: DiagramDocumentNodesItem[];
   edges: DiagramDocumentEdgesItem[];
   viewport: DiagramDocumentViewport;
+  background?: DiagramDocumentBackground;
 }

@@ -11,15 +11,18 @@ import {
 } from '@xyflow/react';
 import { initialNodes, initialEdges } from '../mock/initialState';
 import { placeResource } from '../features/canvas/placeResource';
+import type { CanvasBackground } from '../data/useDiagrams';
 
-type CanvasSnapshot = { nodes: FlowNode[]; edges: Edge[]; viewport: { x: number; y: number; zoom: number } };
-const snapshot = (state: CanvasState): CanvasSnapshot => structuredClone({ nodes: state.nodes, edges: state.edges, viewport: state.viewport });
+type CanvasSnapshot = { nodes: FlowNode[]; edges: Edge[]; viewport: { x: number; y: number; zoom: number }; background: CanvasBackground };
+const snapshot = (state: CanvasState): CanvasSnapshot => structuredClone({ nodes: state.nodes, edges: state.edges, viewport: state.viewport, background: state.background });
 const history = (state: CanvasState) => state.gestureSnapshot ? {} : { past: [...state.past, snapshot(state)].slice(-50), future: [] };
 
 interface CanvasState {
     nodes: FlowNode[];
     edges: Edge[];
     viewport: { x: number; y: number; zoom: number };
+    background: CanvasBackground;
+    setBackground: (background: CanvasBackground) => void;
     past: CanvasSnapshot[];
     future: CanvasSnapshot[];
     gestureSnapshot: CanvasSnapshot | null;
@@ -47,7 +50,8 @@ interface CanvasState {
     openCanvasNode: (id: string) => void;
     updateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
     updateNodeSize: (nodeId: string, width: number, height: number) => void;
-    loadDocument: (nodes: FlowNode[], edges: Edge[], viewport?: { x: number; y: number; zoom: number }) => void;
+    updateNodePresentation: (nodeId: string, value: { width?: number; height?: number; accent?: 'default' | 'primary' | 'muted'; hidden?: boolean }) => void;
+    loadDocument: (nodes: FlowNode[], edges: Edge[], viewport?: { x: number; y: number; zoom: number }, background?: CanvasBackground) => void;
     setViewport: (viewport: { x: number; y: number; zoom: number }) => void;
     updateEdgeData: (edgeId: string, newData: Record<string, unknown>) => void;
     // Función para manejar el agrupamiento
@@ -58,9 +62,11 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     nodes: initialNodes,
     edges: initialEdges,
     viewport: { x: 0, y: 0, zoom: 1 },
+    background: { variant: 'dots', tone: 'default' },
+    setBackground: background => set(state => ({ ...history(state), background })),
     past: [], future: [], gestureSnapshot: null,
     beginGesture: () => set(state => state.gestureSnapshot ? state : { gestureSnapshot: snapshot(state) }),
-    endGesture: () => set(state => { const before = state.gestureSnapshot; if (!before) return state; const changed = JSON.stringify(before.nodes) !== JSON.stringify(state.nodes) || JSON.stringify(before.edges) !== JSON.stringify(state.edges); return { gestureSnapshot: null, ...(changed ? { past: [...state.past, before].slice(-50), future: [] } : {}) }; }),
+    endGesture: () => set(state => { const before = state.gestureSnapshot; if (!before) return state; const changed = JSON.stringify(before.nodes) !== JSON.stringify(state.nodes) || JSON.stringify(before.edges) !== JSON.stringify(state.edges) || JSON.stringify(before.background) !== JSON.stringify(state.background); return { gestureSnapshot: null, ...(changed ? { past: [...state.past, before].slice(-50), future: [] } : {}) }; }),
     undo: () => set(state => { const previous = state.past.at(-1); if (!previous) return state; return { ...structuredClone(previous), past: state.past.slice(0, -1), future: [snapshot(state), ...state.future].slice(0, 50), gestureSnapshot: null }; }),
     redo: () => set(state => { const next = state.future[0]; if (!next) return state; return { ...structuredClone(next), past: [...state.past, snapshot(state)].slice(-50), future: state.future.slice(1), gestureSnapshot: null }; }),
     focusRequest: null,
@@ -138,8 +144,9 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     openCanvasNode: id => set(state => ({ inspectorOpen: true, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
     updateNodeData: (nodeId, data) => set(state => ({ ...history(state), nodes: state.nodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node) })),
     updateNodeSize: (nodeId, width, height) => set(state => ({ ...history(state), nodes: state.nodes.map(node => node.id === nodeId ? { ...node, width: Math.max(40, width), height: Math.max(24, height) } : node) })),
+    updateNodePresentation: (nodeId, value) => set(state => ({ ...history(state), nodes: state.nodes.map(node => node.id === nodeId ? { ...node, width: value.width === undefined || !Number.isFinite(value.width) ? node.width : Math.min(2000, Math.max(160, value.width)), height: value.height === undefined || !Number.isFinite(value.height) ? node.height : Math.min(2000, Math.max(80, value.height)), hidden: value.hidden ?? node.hidden, data: { ...node.data, ...(value.accent ? { accent: value.accent } : {}) } } : node) })),
 
-    loadDocument: (nodes, edges, viewport) => set({ nodes, edges, ...(viewport ? { viewport } : {}), past: [], future: [], gestureSnapshot: null }),
+    loadDocument: (nodes, edges, viewport, background) => set({ nodes, edges, ...(viewport ? { viewport } : {}), background: background ?? { variant: 'dots', tone: 'default' }, past: [], future: [], gestureSnapshot: null }),
     setViewport: viewport => set({ viewport }),
 
     updateEdgeData: (edgeId, newData) => {

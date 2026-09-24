@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { useResource, useResourceActions } from '../../data/useResources';
 import { useCanvasStore } from '../../store/useCanvasStore';
+import { CanvasPresentationInspector } from './CanvasPresentationInspector';
 
 export function CanvasResourceInspector({ nodeId, resourceId, caption = '' }: { nodeId: string; resourceId: string; caption?: string }) {
   const resource = useResource(resourceId);
@@ -49,5 +50,6 @@ export function CanvasResourceInspector({ nodeId, resourceId, caption = '' }: { 
       <label className="mt-2 block">Etiqueta local<input className="mt-1 w-full rounded border border-border bg-background p-2" value={caption} maxLength={120} onChange={event => updateNodeData(nodeId, { caption: event.target.value })} /></label>
       <p className="mt-2 text-xs text-outline">Esta etiqueta no cambia el recurso de la Biblioteca.</p>
     </section>
+    <CanvasPresentationInspector nodeId={nodeId} />
   </div>;
 }

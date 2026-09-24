@@ -14,7 +14,7 @@ function snapshot(): DiagramDocument {
   const edges = JSON.parse(JSON.stringify(state.edges)) as DiagramDocument['edges'];
   for (const node of nodes) { const transient = node as unknown as Record<string, unknown>; delete transient.selected; delete transient.dragging; delete transient.measured; delete transient.internals; }
   for (const edge of edges) delete (edge as unknown as Record<string, unknown>).selected;
-  return { schemaVersion: 1, nodes, edges, viewport: state.viewport };
+  return { schemaVersion: 1, nodes, edges, viewport: state.viewport, background: state.background };
 }
 const fingerprint = (document: DiagramDocument) => JSON.stringify(document);
 type SaveStatus = 'saved' | 'saving' | 'offline' | 'conflict' | 'storage-error';
