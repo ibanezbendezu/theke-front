@@ -2,16 +2,21 @@ import { BaseEdge, EdgeLabelRenderer, type EdgeProps, useReactFlow } from '@xyfl
 import { useCanvasStore } from '../../../store/useCanvasStore';
 import { GripHorizontal } from 'lucide-react';
 import { useRelation } from '../../../data/useRelations';
+import { useState } from 'react';
 
 export function EditableEdge({
-                                 id, sourceX, sourceY, targetX, targetY, style, markerEnd, data, selected
+                                 id, sourceX, sourceY, targetX, targetY, source, target, style, markerEnd, data, selected
                              }: EdgeProps) {
+    const [hovered, setHovered] = useState(false);
     const updateEdgeData = useCanvasStore(state => state.updateEdgeData);
     const requestEditRelation = useCanvasStore(state => state.requestEditRelation);
     const relationId = typeof data?.relationId === 'string' ? data.relationId : undefined;
     const relation = useRelation(relationId);
     const relationLabel = relation.data?.label || relation.data?.typeLabel || String(data?.typeLabel ?? data?.typeKey ?? 'Relación');
     const relationDirection = relation.data?.direction ?? data?.direction;
+    const relationEvidence = relation.data?.evidenceStatus === 'confirmed' ? 'evidencia citada' : relation.data?.evidenceStatus === 'needs_evidence' ? 'falta evidencia' : 'sin evidencia citada';
+    const sourceTitle = relation.data?.source.title ?? source;
+    const targetTitle = relation.data?.target.title ?? target;
     const { screenToFlowPosition } = useReactFlow();
 
     // 1. Centro matemático exacto entre los dos nodos
@@ -62,10 +67,10 @@ export function EditableEdge({
     return (
         <>
             {/* La línea visible */}
-            <BaseEdge path={edgePath} markerEnd={markerEnd} style={selected ? { ...style, strokeWidth: 3, stroke: 'var(--color-primary)' } : { ...style, strokeWidth: 2, stroke: 'var(--color-outline)' }} />
+            <BaseEdge path={edgePath} markerEnd={markerEnd} style={selected ? { ...style, strokeWidth: 3, stroke: 'var(--color-primary)' } : hovered ? { ...style, strokeWidth: 3, stroke: 'var(--color-on-background)' } : { ...style, strokeWidth: 2, stroke: 'var(--color-outline)' }} />
 
             {/* Hitbox para facilitar el clic/selección de la línea */}
-            <path d={edgePath} fill="none" strokeOpacity={0} strokeWidth={25} className="react-flow__edge-interaction cursor-pointer" />
+            <path d={edgePath} fill="none" strokeOpacity={0} strokeWidth={25} className="react-flow__edge-interaction cursor-pointer" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} />
 
             <EdgeLabelRenderer>
                 <div
@@ -80,8 +85,8 @@ export function EditableEdge({
                     className="nodrag nopan relative flex items-center justify-center"
                 >
                     {/* Caja de Texto (El centro de este input cruzará la línea milimétricamente) */}
-                    {relationId ? <button type="button" className="rounded border border-border bg-background px-2 py-1 text-xs font-medium text-on-background shadow-sm focus-visible:outline-2 focus-visible:outline-primary" aria-label={`Editar Relación ${relationLabel}, ${relationDirection === 'directed' ? 'dirigida' : 'no dirigida'}`} onClick={() => requestEditRelation(relationId)}>
-                        {relationLabel}{relationDirection === 'directed' ? ' →' : ' ↔'}
+                    {relationId ? <button type="button" className={`flex max-w-48 items-center gap-1 rounded border bg-background px-2 py-1 text-xs font-medium text-on-background shadow-sm focus-visible:outline-2 focus-visible:outline-primary ${selected || hovered ? 'border-primary ring-1 ring-primary' : 'border-border'}`} aria-label={`Editar Relación ${sourceTitle} ${relationDirection === 'directed' ? 'hacia' : 'con'} ${targetTitle}, ${relationLabel}, ${relationDirection === 'directed' ? 'dirigida' : 'no dirigida'}, ${relationEvidence}`} title={relationLabel} onFocus={() => setHovered(true)} onBlur={() => setHovered(false)} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={() => requestEditRelation(relationId)}>
+                        <span className="min-w-0 truncate">{relationLabel}</span><span aria-hidden="true" className="shrink-0">{relationDirection === 'directed' ? '→' : '↔'}</span>
                     </button> : <input
                         value={(data?.label as string) || ''}
                         onChange={(e) => updateEdgeData(id, { label: e.target.value })}

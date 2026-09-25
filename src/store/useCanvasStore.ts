@@ -45,6 +45,8 @@ interface CanvasState {
     removeNodes: (ids: string[]) => void;
     focusRequest: { id: string; nonce: string } | null;
     focusNode: (id: string) => void;
+    focusEdgeRequest: { id: string; nonce: string } | null;
+    focusEdge: (id: string) => void;
     relationRequest: { source?: string; target?: string; nonce: string } | null;
     requestRelation: (source?: string, target?: string) => void;
     editRelationRequest: { id: string; nonce: string } | null;
@@ -74,6 +76,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     undo: () => set(state => { const previous = state.past.at(-1); if (!previous) return state; return { ...structuredClone(previous), past: state.past.slice(0, -1), future: [snapshot(state), ...state.future].slice(0, 50), gestureSnapshot: null }; }),
     redo: () => set(state => { const next = state.future[0]; if (!next) return state; return { ...structuredClone(next), past: [...state.past, snapshot(state)].slice(-50), future: state.future.slice(1), gestureSnapshot: null }; }),
     focusRequest: null,
+    focusEdgeRequest: null,
     relationRequest: null,
     requestRelation: (source, target) => set({ relationRequest: { source, target, nonce: crypto.randomUUID() } }),
     editRelationRequest: null,
@@ -147,9 +150,10 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         return { ...history(state), nodes: [...nodes.filter(item => item.id !== nodeId), moved] };
     }),
     removeNodes: ids => set(state => { const removing = new Set(ids); for (let changed = true; changed;) { changed = false; for (const node of state.nodes) if (node.parentId && removing.has(node.parentId) && !removing.has(node.id)) { removing.add(node.id); changed = true; } } return { ...history(state), nodes: state.nodes.filter(node => !removing.has(node.id)), edges: state.edges.filter(edge => !removing.has(edge.source) && !removing.has(edge.target)) }; }),
-    focusNode: id => set(state => ({ focusRequest: { id, nonce: crypto.randomUUID() }, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
+    focusNode: id => set(state => ({ focusRequest: { id, nonce: crypto.randomUUID() }, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })), edges: state.edges.map(edge => ({ ...edge, selected: false })) })),
+    focusEdge: id => set(state => ({ focusEdgeRequest: { id, nonce: crypto.randomUUID() }, inspectorOpen: true, nodes: state.nodes.map(node => ({ ...node, selected: false })), edges: state.edges.map(edge => ({ ...edge, selected: edge.id === id })) })),
     setInspectorOpen: inspectorOpen => set({ inspectorOpen }),
-    openCanvasNode: id => set(state => ({ inspectorOpen: true, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })) })),
+    openCanvasNode: id => set(state => ({ inspectorOpen: true, nodes: state.nodes.map(node => ({ ...node, selected: node.id === id })), edges: state.edges.map(edge => ({ ...edge, selected: false })) })),
     updateNodeData: (nodeId, data) => set(state => ({ ...history(state), nodes: state.nodes.map(node => node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node) })),
     updateNodeSize: (nodeId, width, height) => set(state => ({ ...history(state), nodes: state.nodes.map(node => node.id === nodeId ? { ...node, width: Math.max(40, width), height: Math.max(24, height) } : node) })),
     updateNodePresentation: (nodeId, value) => set(state => ({ ...history(state), nodes: state.nodes.map(node => node.id === nodeId ? { ...node, width: value.width === undefined || !Number.isFinite(value.width) ? node.width : Math.min(2000, Math.max(160, value.width)), height: value.height === undefined || !Number.isFinite(value.height) ? node.height : Math.min(2000, Math.max(80, value.height)), hidden: value.hidden ?? node.hidden, data: { ...node.data, ...(value.accent ? { accent: value.accent } : {}) } } : node) })),

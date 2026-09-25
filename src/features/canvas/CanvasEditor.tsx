@@ -58,8 +58,10 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
     const saveViewport = useCanvasStore(state => state.setViewport);
     const background = useCanvasStore(state => state.background);
     const focusRequest = useCanvasStore(state => state.focusRequest);
+    const focusEdgeRequest = useCanvasStore(state => state.focusEdgeRequest);
     useEffect(() => { if (viewport) void setViewport(viewport); }, [viewport, setViewport]);
     useEffect(() => { if (!focusRequest) return; const nodes = useCanvasStore.getState().nodes; const node = nodes.find(item => item.id === focusRequest.id); if (!node) return; let x = node.position.x; let y = node.position.y; let parentId = node.parentId; while (parentId) { const parent = nodes.find(item => item.id === parentId); if (!parent) break; x += parent.position.x; y += parent.position.y; parentId = parent.parentId; } void setCenter(x + (node.width ?? 288) / 2, y + (node.height ?? 112) / 2, { zoom: 1, duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300 }); }, [focusRequest, setCenter]);
+    useEffect(() => { if (!focusEdgeRequest) return; const state = useCanvasStore.getState(); const edge = state.edges.find(item => item.id === focusEdgeRequest.id); if (!edge) return; const center = (id: string) => { const node = state.nodes.find(item => item.id === id); if (!node) return null; let x = node.position.x; let y = node.position.y; let parentId = node.parentId; while (parentId) { const parent = state.nodes.find(item => item.id === parentId); if (!parent) break; x += parent.position.x; y += parent.position.y; parentId = parent.parentId; } return { x: x + (node.width ?? 288) / 2, y: y + (node.height ?? 112) / 2 }; }; const source = center(edge.source); const target = center(edge.target); if (source && target) void setCenter((source.x + target.x) / 2, (source.y + target.y) / 2, { zoom: 1, duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300 }); }, [focusEdgeRequest, setCenter]);
 
     const connectingNodeId = useRef<string | null>(null);
 

@@ -53,7 +53,7 @@ development_status:
   epic-3: in-progress
   3-1-crear-una-relación-semántica-entre-recursos: done
   3-2-explicar-y-documentar-una-relación: done
-  3-3-explorar-relaciones-en-el-canvas-y-la-vista-semántica: backlog
+  3-3-explorar-relaciones-en-el-canvas-y-la-vista-semántica: done
   3-4-reutilizar-y-gestionar-relaciones-existentes: backlog
   epic-3-retrospective: optional
 
