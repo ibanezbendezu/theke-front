@@ -1,11 +1,17 @@
 import { BaseEdge, EdgeLabelRenderer, type EdgeProps, useReactFlow } from '@xyflow/react';
 import { useCanvasStore } from '../../../store/useCanvasStore';
 import { GripHorizontal } from 'lucide-react';
+import { useRelation } from '../../../data/useRelations';
 
 export function EditableEdge({
                                  id, sourceX, sourceY, targetX, targetY, style, markerEnd, data, selected
                              }: EdgeProps) {
     const updateEdgeData = useCanvasStore(state => state.updateEdgeData);
+    const requestEditRelation = useCanvasStore(state => state.requestEditRelation);
+    const relationId = typeof data?.relationId === 'string' ? data.relationId : undefined;
+    const relation = useRelation(relationId);
+    const relationLabel = relation.data?.label || relation.data?.typeLabel || String(data?.typeLabel ?? data?.typeKey ?? 'Relación');
+    const relationDirection = relation.data?.direction ?? data?.direction;
     const { screenToFlowPosition } = useReactFlow();
 
     // 1. Centro matemático exacto entre los dos nodos
@@ -74,9 +80,9 @@ export function EditableEdge({
                     className="nodrag nopan relative flex items-center justify-center"
                 >
                     {/* Caja de Texto (El centro de este input cruzará la línea milimétricamente) */}
-                    {data?.relationId ? <span className="rounded border border-border bg-background px-2 py-1 text-xs font-medium text-on-background shadow-sm" aria-label={`Relación ${String(data.typeLabel ?? data.typeKey ?? '')}, ${data.direction === 'directed' ? 'dirigida' : 'no dirigida'}`}>
-                        {String(data.typeLabel ?? data.typeKey ?? 'Relación')}{data.direction === 'directed' ? ' →' : ' ↔'}
-                    </span> : <input
+                    {relationId ? <button type="button" className="rounded border border-border bg-background px-2 py-1 text-xs font-medium text-on-background shadow-sm focus-visible:outline-2 focus-visible:outline-primary" aria-label={`Editar Relación ${relationLabel}, ${relationDirection === 'directed' ? 'dirigida' : 'no dirigida'}`} onClick={() => requestEditRelation(relationId)}>
+                        {relationLabel}{relationDirection === 'directed' ? ' →' : ' ↔'}
+                    </button> : <input
                         value={(data?.label as string) || ''}
                         onChange={(e) => updateEdgeData(id, { label: e.target.value })}
                         placeholder="Añadir texto..."

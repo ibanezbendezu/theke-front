@@ -37,12 +37,14 @@ import type {
   ProjectListResponse,
   ProjectResourceListResponse,
   ProjectResponse,
+  RelationDetailResponse,
   RelationTypeListResponse,
   ResourceAccessResponse,
   ResourceListResponse,
   ResourcePlacementInput,
   ResourceResponse,
   UnauthorizedResponse,
+  UpdateRelationInput,
   UploadIntent,
   UploadListResponse,
   UploadPolicyResponse,
@@ -1782,6 +1784,111 @@ return thekeFetch<createDiagramRelationResponse>(getCreateDiagramRelationUrl(id)
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(createRelationInput)
+  }
+);}
+
+
+
+export type getRelationResponse200 = {
+  data: RelationDetailResponse
+  status: 200
+}
+
+export type getRelationResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getRelationResponseSuccess = (getRelationResponse200) & {
+  headers: Headers;
+};
+export type getRelationResponseError = (getRelationResponse404) & {
+  headers: Headers;
+};
+
+export type getRelationResponse = (getRelationResponseSuccess | getRelationResponseError)
+
+export const getGetRelationUrl = (id: string,) => {
+
+
+
+
+  return `/v1/relations/${id}`
+}
+
+export const getRelation = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<getRelationResponse> => {
+
+  return thekeFetch<getRelationResponse>(getGetRelationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type updateRelationResponse200 = {
+  data: RelationDetailResponse
+  status: 200
+}
+
+export type updateRelationResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type updateRelationResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type updateRelationResponse409 = {
+  data: ApiErrorResponse
+  status: 409
+}
+
+export type updateRelationResponseSuccess = (updateRelationResponse200) & {
+  headers: Headers;
+};
+export type updateRelationResponseError = (updateRelationResponse400 | updateRelationResponse404 | updateRelationResponse409) & {
+  headers: Headers;
+};
+
+export type updateRelationResponse = (updateRelationResponseSuccess | updateRelationResponseError)
+
+export const getUpdateRelationUrl = (id: string,) => {
+
+
+
+
+  return `/v1/relations/${id}`
+}
+
+export const updateRelation = async (id: string,
+    updateRelationInput: UpdateRelationInput, options?: Parameters<typeof thekeFetch>[1]): Promise<updateRelationResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<updateRelationResponse>(getUpdateRelationUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateRelationInput)
   }
 );}
 

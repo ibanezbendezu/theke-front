@@ -47,6 +47,8 @@ interface CanvasState {
     focusNode: (id: string) => void;
     relationRequest: { source?: string; target?: string; nonce: string } | null;
     requestRelation: (source?: string, target?: string) => void;
+    editRelationRequest: { id: string; nonce: string } | null;
+    requestEditRelation: (id: string) => void;
     inspectorOpen: boolean;
     setInspectorOpen: (open: boolean) => void;
     openCanvasNode: (id: string) => void;
@@ -74,6 +76,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     focusRequest: null,
     relationRequest: null,
     requestRelation: (source, target) => set({ relationRequest: { source, target, nonce: crypto.randomUUID() } }),
+    editRelationRequest: null,
+    requestEditRelation: id => set({ editRelationRequest: { id, nonce: crypto.randomUUID() } }),
     inspectorOpen: true,
 
     onNodesChange: changes => set(state => ({ ...(changes.some(change => change.type !== 'select' && change.type !== 'dimensions') ? history(state) : {}), nodes: applyNodeChanges(changes, state.nodes) })),

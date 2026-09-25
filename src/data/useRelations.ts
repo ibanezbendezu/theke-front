@@ -6,6 +6,9 @@ import { thekeFetch } from '../api/httpClient';
 export interface RelationTypeOption { key: string; label: string }
 export interface CreatedRelation { relationId: string; edgeId: string; revision: number; document: DiagramDocument; reused: boolean }
 export interface CreateRelationInput { sourceNodeId: string; targetNodeId: string; direction: 'directed' | 'undirected'; typeKey: string; customTypeName?: string; expectedRevision: number; idempotencyKey: string; reuseExisting?: boolean }
+export interface RelationEvidence { id: string; resourceId: string; title: string; excerpt: string | null; note: string | null }
+export interface RelationDetail { id: string; sourceResourceId: string; targetResourceId: string; source: { id: string; title: string }; target: { id: string; title: string }; direction: 'directed' | 'undirected'; typeKey: string; typeLabel: string; label: string | null; explanation: string | null; provenance: string | null; evidenceStatus: 'none' | 'needs_evidence' | 'confirmed'; evidence: RelationEvidence[]; revision: number; createdByUserId: string | null; updatedByUserId: string | null; createdAt: string; updatedAt: string }
+export interface UpdateRelationInput { label: string; explanation: string; provenance: string; evidenceStatus: RelationDetail['evidenceStatus']; evidence: { resourceId: string; excerpt: string; note: string }[]; expectedRevision: number }
 interface Envelope<T> { data: T }
 
 export function useRelationTypes(projectId: string) {
@@ -22,4 +25,21 @@ export function useCreateRelation(diagramId: string) {
     const response = await thekeFetch<{ data: Envelope<CreatedRelation> }>(`/v1/diagrams/${diagramId}/relations`, { method: 'POST', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
     return response.data.data;
   };
+}
+
+export function useRelation(id?: string) {
+  const { getToken, userId } = useAuth();
+  return useQuery({ queryKey: ['private', 'relation', userId, id], enabled: Boolean(userId && id), queryFn: async ({ signal }) => {
+    const response = await thekeFetch<{ data: Envelope<RelationDetail> }>(`/v1/relations/${id}`, { headers: { Authorization: `Bearer ${await getToken()}` }, signal });
+    return response.data.data;
+  } });
+}
+
+export function useUpdateRelation(id: string) {
+  const { getToken, userId } = useAuth();
+  const update = async (input: UpdateRelationInput) => {
+    const response = await thekeFetch<{ data: Envelope<RelationDetail> }>(`/v1/relations/${id}`, { method: 'PATCH', headers: { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
+    return response.data.data;
+  };
+  return { update, queryKey: ['private', 'relation', userId, id] as const };
 }
