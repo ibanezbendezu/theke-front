@@ -74,7 +74,9 @@ export function EditableEdge({
                     className="nodrag nopan relative flex items-center justify-center"
                 >
                     {/* Caja de Texto (El centro de este input cruzará la línea milimétricamente) */}
-                    <input
+                    {data?.relationId ? <span className="rounded border border-border bg-background px-2 py-1 text-xs font-medium text-on-background shadow-sm" aria-label={`Relación ${String(data.typeLabel ?? data.typeKey ?? '')}, ${data.direction === 'directed' ? 'dirigida' : 'no dirigida'}`}>
+                        {String(data.typeLabel ?? data.typeKey ?? 'Relación')}{data.direction === 'directed' ? ' →' : ' ↔'}
+                    </span> : <input
                         value={(data?.label as string) || ''}
                         onChange={(e) => updateEdgeData(id, { label: e.target.value })}
                         placeholder="Añadir texto..."
@@ -82,7 +84,7 @@ export function EditableEdge({
                             ${selected ? 'border-primary ring-1 ring-primary' : 'border-transparent hover:border-border'}
                         `}
                         style={{ width: Math.max(100, ((data?.label as string)?.length || 0) * 8 + 30) }}
-                    />
+                    />}
 
                     {/* Tirador para deformar (Flota absolutamente por debajo del input para no afectar el centro) */}
                     <div

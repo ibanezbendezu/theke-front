@@ -45,6 +45,8 @@ interface CanvasState {
     removeNodes: (ids: string[]) => void;
     focusRequest: { id: string; nonce: string } | null;
     focusNode: (id: string) => void;
+    relationRequest: { source?: string; target?: string; nonce: string } | null;
+    requestRelation: (source?: string, target?: string) => void;
     inspectorOpen: boolean;
     setInspectorOpen: (open: boolean) => void;
     openCanvasNode: (id: string) => void;
@@ -70,6 +72,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     undo: () => set(state => { const previous = state.past.at(-1); if (!previous) return state; return { ...structuredClone(previous), past: state.past.slice(0, -1), future: [snapshot(state), ...state.future].slice(0, 50), gestureSnapshot: null }; }),
     redo: () => set(state => { const next = state.future[0]; if (!next) return state; return { ...structuredClone(next), past: [...state.past, snapshot(state)].slice(-50), future: state.future.slice(1), gestureSnapshot: null }; }),
     focusRequest: null,
+    relationRequest: null,
+    requestRelation: (source, target) => set({ relationRequest: { source, target, nonce: crypto.randomUUID() } }),
     inspectorOpen: true,
 
     onNodesChange: changes => set(state => ({ ...(changes.some(change => change.type !== 'select' && change.type !== 'dimensions') ? history(state) : {}), nodes: applyNodeChanges(changes, state.nodes) })),
@@ -103,14 +107,14 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         const viewport = get().viewport;
         const origin = preferred ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom };
         const position = placeResource(get().nodes, origin);
-        set(state => ({ ...history(state), nodes: [...state.nodes, { id, type: 'resource', position, data: { resourceId }, selected: true }] }));
+        set(state => ({ ...history(state), nodes: [...state.nodes, { id, type: 'resource', position, width: 288, height: 112, data: { resourceId }, selected: true }] }));
       return id;
     },
     addFolderRepresentation: (folderId, projectId, preferred) => {
         const id = crypto.randomUUID(); const viewport = get().viewport;
         const origin = preferred ?? { x: (window.innerWidth / 2 - viewport.x) / viewport.zoom, y: (window.innerHeight / 2 - viewport.y) / viewport.zoom };
         const position = placeResource(get().nodes, origin);
-        set(state => ({ ...history(state), nodes: [...state.nodes, { id, type: 'folder', position, data: { folderId, projectId }, selected: true }] }));
+        set(state => ({ ...history(state), nodes: [...state.nodes, { id, type: 'folder', position, width: 288, height: 112, data: { folderId, projectId }, selected: true }] }));
         return id;
     },
     addUploadedResource: (resourceId, batchId, preferred, total) => {

@@ -29,4 +29,10 @@ describe('migración de documentos del canvas', () => {
     expect(() => migrateCanvasDocument({ schemaVersion: 0, nodes: [] })).toThrow('incompleto');
     expect(() => migrateCanvasDocument({ schemaVersion: 2, nodes: [], edges: [] })).toThrow('compatible');
   });
+  it('restaura dimensiones de representaciones antiguas para que sigan visibles', () => {
+    const node = { id: 'resource-1', type: 'resource', position: { x: 10, y: 20 }, data: { resourceId: 'resource-id' } };
+    const migrated = migrateCanvasDocument({ schemaVersion: 1, nodes: [node], edges: [], viewport: { x: 0, y: 0, zoom: 1 } });
+    expect(migrated.nodes[0]).toMatchObject({ width: 288, height: 112 });
+    expect(node).not.toHaveProperty('width');
+  });
 });

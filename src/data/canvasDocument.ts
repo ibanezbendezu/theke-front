@@ -9,5 +9,6 @@ export function migrateCanvasDocument(value: unknown): DiagramDocument {
   if (!viewport || ![viewport.x, viewport.y, viewport.zoom].every(value => typeof value === 'number' && Number.isFinite(value)) || viewport.zoom <= 0) throw new Error('La vista del diagrama está dañada.');
   const background = source.background ?? { variant: 'dots', tone: 'default' };
   if (!['plain', 'dots', 'grid'].includes(background.variant) || !['default', 'surface'].includes(background.tone)) throw new Error('El fondo del diagrama está dañado.');
-  return { schemaVersion: 1, nodes: source.nodes, edges: source.edges, viewport, background };
+  const nodes = source.nodes.map(node => node.type === 'resource' || node.type === 'folder' ? { ...node, width: node.width ?? 288, height: node.height ?? 112 } : node);
+  return { schemaVersion: 1, nodes, edges: source.edges, viewport, background };
 }

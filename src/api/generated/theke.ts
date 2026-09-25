@@ -8,6 +8,8 @@ import type {
   AccessibilityInput,
   ApiErrorResponse,
   BadRequestResponse,
+  CreateRelationInput,
+  CreateRelationResponse,
   DiagramInput,
   DiagramListResponse,
   DiagramResponse,
@@ -35,6 +37,7 @@ import type {
   ProjectListResponse,
   ProjectResourceListResponse,
   ProjectResponse,
+  RelationTypeListResponse,
   ResourceAccessResponse,
   ResourceListResponse,
   ResourcePlacementInput,
@@ -1674,6 +1677,111 @@ export const restoreDiagram = async (id: string, options?: Parameters<typeof the
     method: 'POST'
 
 
+  }
+);}
+
+
+
+export type listRelationTypesResponse200 = {
+  data: RelationTypeListResponse
+  status: 200
+}
+
+export type listRelationTypesResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type listRelationTypesResponseSuccess = (listRelationTypesResponse200) & {
+  headers: Headers;
+};
+export type listRelationTypesResponseError = (listRelationTypesResponse404) & {
+  headers: Headers;
+};
+
+export type listRelationTypesResponse = (listRelationTypesResponseSuccess | listRelationTypesResponseError)
+
+export const getListRelationTypesUrl = (projectId: string,) => {
+
+
+
+
+  return `/v1/projects/${projectId}/relation-types`
+}
+
+export const listRelationTypes = async (projectId: string, options?: Parameters<typeof thekeFetch>[1]): Promise<listRelationTypesResponse> => {
+
+  return thekeFetch<listRelationTypesResponse>(getListRelationTypesUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createDiagramRelationResponse201 = {
+  data: CreateRelationResponse
+  status: 201
+}
+
+export type createDiagramRelationResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type createDiagramRelationResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type createDiagramRelationResponse409 = {
+  data: ApiErrorResponse
+  status: 409
+}
+
+export type createDiagramRelationResponseSuccess = (createDiagramRelationResponse201) & {
+  headers: Headers;
+};
+export type createDiagramRelationResponseError = (createDiagramRelationResponse400 | createDiagramRelationResponse404 | createDiagramRelationResponse409) & {
+  headers: Headers;
+};
+
+export type createDiagramRelationResponse = (createDiagramRelationResponseSuccess | createDiagramRelationResponseError)
+
+export const getCreateDiagramRelationUrl = (id: string,) => {
+
+
+
+
+  return `/v1/diagrams/${id}/relations`
+}
+
+export const createDiagramRelation = async (id: string,
+    createRelationInput: CreateRelationInput, options?: Parameters<typeof thekeFetch>[1]): Promise<createDiagramRelationResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<createDiagramRelationResponse>(getCreateDiagramRelationUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(createRelationInput)
   }
 );}
 

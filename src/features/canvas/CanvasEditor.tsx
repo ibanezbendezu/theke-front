@@ -52,7 +52,7 @@ const edgeTypes = {
     editable: EditableEdge,
 };
 
-function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPickFiles }: { viewport?: DiagramDocument['viewport']; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void }) {
+function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPickFiles, onCreateRelation }: { viewport?: DiagramDocument['viewport']; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void; onCreateRelation?: (source?: string, target?: string) => void }) {
     const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, addAnnotation, setNodeParent, beginGesture, endGesture } = useCanvasStore();
     const { screenToFlowPosition, getIntersectingNodes, setViewport, setCenter } = useReactFlow();
     const saveViewport = useCanvasStore(state => state.setViewport);
@@ -115,12 +115,13 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
     }, []);
 
     const onConnectEnd: OnConnectEnd = useCallback((event) => {
+        if (onCreateRelation && connectingNodeId.current) { onCreateRelation(connectingNodeId.current); connectingNodeId.current = null; return; }
         const target = event.target as Element;
         if (target.classList.contains('react-flow__pane') && connectingNodeId.current) {
             const { clientX, clientY } = 'touches' in event ? event.touches[0] : event;
             setMenu({ isOpen: true, x: clientX, y: clientY, flowPosition: screenToFlowPosition({ x: clientX, y: clientY }) });
         }
-    }, [screenToFlowPosition]);
+    }, [screenToFlowPosition, onCreateRelation]);
 
     const handleCreateNode = (type: string, targetPos?: {x: number, y: number}) => {
         const pos = targetPos || menu.flowPosition;
@@ -168,7 +169,7 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
                 edgeTypes={edgeTypes}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
-                onConnect={onConnect}
+                onConnect={connection => { if (onCreateRelation) onCreateRelation(connection.source, connection.target); else onConnect(connection); connectingNodeId.current = null; }}
                 onConnectStart={onConnectStart}
                 onConnectEnd={onConnectEnd}
                 onPaneClick={onPaneClick}
@@ -215,7 +216,7 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
     );
 }
 
-export function CanvasEditor({ document, onReady, onAddResource, onDropResource, onDropFiles, onPickFiles }: { document?: DiagramDocument; onReady?: () => void; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void }) {
+export function CanvasEditor({ document, onReady, onAddResource, onDropResource, onDropFiles, onPickFiles, onCreateRelation }: { document?: DiagramDocument; onReady?: () => void; onAddResource?: (position?: { x: number; y: number }) => void; onDropResource?: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void; onCreateRelation?: (source?: string, target?: string) => void }) {
     const loadDocument = useCanvasStore(state => state.loadDocument);
     useEffect(() => { if (document) { loadDocument(document.nodes, document.edges, document.viewport, document.background); onReady?.(); } }, [document, loadDocument, onReady]);
     const onShortcut = (event: React.KeyboardEvent) => {
@@ -235,8 +236,8 @@ export function CanvasEditor({ document, onReady, onAddResource, onDropResource,
     return (
         <div className="w-full h-full relative focus-visible:outline-2 focus-visible:outline-primary" tabIndex={0} role="region" aria-label="Lienzo interactivo. Usa flechas para recorrer elementos, Intro para abrir detalle y Suprimir para quitar la representación." onKeyDown={onShortcut}>
             <ReactFlowProvider>
-                <CanvasCore viewport={document?.viewport} onAddResource={onAddResource} onDropResource={onDropResource} onDropFiles={onDropFiles} onPickFiles={onPickFiles} />
-                <CanvasToolbar onAddResource={onAddResource} />
+                <CanvasCore viewport={document?.viewport} onAddResource={onAddResource} onDropResource={onDropResource} onDropFiles={onDropFiles} onPickFiles={onPickFiles} onCreateRelation={onCreateRelation} />
+                <CanvasToolbar onAddResource={onAddResource} onCreateRelation={onCreateRelation ? () => onCreateRelation() : undefined} />
             </ReactFlowProvider>
         </div>
     );

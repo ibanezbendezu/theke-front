@@ -1,4 +1,5 @@
 import { useAuth } from '@clerk/clerk-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ApiError } from '../api/httpClient';
 import { Button } from '../components/ui/Button';
@@ -6,6 +7,8 @@ import { deleteCanvasDraft, readCanvasDraft, writeCanvasDraft, type CanvasDraft 
 import { migrateCanvasDocument } from '../data/canvasDocument';
 import { type Diagram, type DiagramDocument, useSaveDiagramDocument } from '../data/useDiagrams';
 import { CanvasEditor } from '../features/canvas/CanvasEditor';
+import { RelationCreateDialog } from '../features/canvas/RelationCreateDialog';
+import { useCreateRelation, type CreateRelationInput } from '../data/useRelations';
 import { useCanvasStore } from '../store/useCanvasStore';
 
 function snapshot(): DiagramDocument {
@@ -20,7 +23,13 @@ const fingerprint = (document: DiagramDocument) => JSON.stringify(document);
 type SaveStatus = 'saved' | 'saving' | 'offline' | 'conflict' | 'storage-error';
 
 export function DiagramWorkspace({ diagram, refetch, onAddResource, onDropResource, onDropFiles, onPickFiles, onCanvasReady }: { diagram: Diagram; refetch: () => Promise<{ data?: Diagram }>; onAddResource: (position?: { x: number; y: number }) => void; onDropResource: (resourceId: string, position: { x: number; y: number }) => void; onDropFiles?: (files: File[], position: { x: number; y: number }) => void; onPickFiles?: (position?: { x: number; y: number }) => void; onCanvasReady?: () => void }) {
-  const { userId } = useAuth(); const draftKey = `${userId}:${diagram.id}`; const save = useSaveDiagramDocument(diagram.id); const saveRef = useRef(save);
+  const { userId } = useAuth(); const client = useQueryClient(); const draftKey = `${userId}:${diagram.id}`; const save = useSaveDiagramDocument(diagram.id); const saveRef = useRef(save);
+  const createRelation = useCreateRelation(diagram.id);
+  const [relationInitial, setRelationInitial] = useState<{ source?: string; target?: string } | null>(null);
+  const relationRequest = useCanvasStore(state => state.relationRequest);
+  const [dismissedRelationNonce, setDismissedRelationNonce] = useState(() => useCanvasStore.getState().relationRequest?.nonce ?? null);
+  const activeRelation = relationInitial ?? (relationRequest && relationRequest.nonce !== dismissedRelationNonce ? relationRequest : null);
+  const closeRelation = () => { setRelationInitial(null); setDismissedRelationNonce(relationRequest?.nonce ?? null); };
   useEffect(() => { saveRef.current = save; }, [save]);
   const remote = useMemo(() => { try { return { document: migrateCanvasDocument(diagram.document), error: '' }; } catch (error) { return { document: null, error: error instanceof Error ? error.message : 'No se pudo abrir el documento.' }; } }, [diagram.document]);
   const initialRemote = useRef(remote);
@@ -62,8 +71,16 @@ export function DiagramWorkspace({ diagram, refetch, onAddResource, onDropResour
   const restore = () => { const draft = latestRef.current; if (!draft) return; try { const migrated = migrateCanvasDocument(draft.document); latestRef.current = { ...draft, document: migrated, baseRevision: diagram.revision, operationId: crypto.randomUUID() }; queueWrite(latestRef.current); setDocument(migrated); setChoice('ready'); setStatus('saving'); schedule(); } catch { setStatus('storage-error'); } };
   const reloadRemote = async () => { const result = await refetch(); if (!result.data) return; const migrated = migrateCanvasDocument(result.data.document); blockedRef.current = true; await journalQueue.current; await deleteCanvasDraft(draftKey); latestRef.current = null; retryRef.current = null; revisionRef.current = result.data.revision; confirmedRef.current = fingerprint(migrated); setDocument(migrated); setConflict(false); setStatus('saved'); blockedRef.current = false; };
   const recoverLocal = async () => { const result = await refetch(); if (!result.data || !latestRef.current) return; revisionRef.current = result.data.revision; retryRef.current = null; latestRef.current = { ...latestRef.current, baseRevision: result.data.revision, operationId: crypto.randomUUID() }; queueWrite(latestRef.current); blockedRef.current = false; setConflict(false); schedule(0); };
+  const createCanonicalRelation = async (input: Omit<CreateRelationInput, 'expectedRevision'>) => {
+    if (status !== 'saved' || latestRef.current || savingRef.current) throw new Error('Espera a que el diagrama termine de guardarse.');
+    const result = await createRelation({ ...input, expectedRevision: revisionRef.current });
+    revisionRef.current = result.revision; confirmedRef.current = fingerprint(result.document);
+    client.setQueryData<Diagram>(['private', 'diagram', userId, diagram.id], current => current ? { ...current, document: result.document, revision: result.revision } : current);
+    void client.invalidateQueries({ queryKey: ['private', 'relation-types', userId, diagram.projectId] });
+    setDocument(result.document); closeRelation(); setStatus('saved');
+  };
   if (remote.error) return <p role="alert" className="p-6 text-red-600">{remote.error}</p>;
   if (choice === 'checking') return <p role="status" className="p-6">Buscando cambios pendientes…</p>;
   if (choice === 'draft') return <div className="m-6 max-w-xl rounded-lg border border-border bg-background p-5"><h2 className="font-semibold">Hay cambios sin confirmar</h2><p className="mt-2 text-sm text-outline">Encontramos un borrador local. Puedes recuperarlo sobre la revisión remota {diagram.revision} o descartarlo.</p><div className="mt-4 flex gap-2"><Button variant="primary" onClick={restore}>Recuperar cambios</Button><Button variant="outline" onClick={() => void discard()}>Descartar borrador</Button></div></div>;
-  return <div className="relative h-full w-full"><div role="status" aria-live="polite" className="absolute right-3 top-3 z-40 rounded border border-border bg-background px-2 py-1 text-xs">{{ saved: 'Guardado', saving: 'Guardando…', offline: 'Sin conexión: cambios pendientes', conflict: 'Conflicto de revisión', 'storage-error': 'No se pudo proteger el borrador local' }[status]}</div>{document && <CanvasEditor document={document} onReady={ready} onAddResource={onAddResource} onDropResource={onDropResource} onDropFiles={onDropFiles} onPickFiles={onPickFiles} />}{conflict && <div role="dialog" aria-modal="true" aria-labelledby="canvas-conflict-title" className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><div className="max-w-md rounded-lg border border-border bg-background p-5"><h2 id="canvas-conflict-title" className="font-semibold">El diagrama cambió en otra sesión</h2><p className="mt-2 text-sm">Tus cambios locales siguen protegidos. Carga la versión remota o recupera los tuyos sobre ella.</p><div className="mt-4 flex gap-2"><Button onClick={() => void reloadRemote()}>Cargar versión remota</Button><Button variant="primary" onClick={() => void recoverLocal()}>Recuperar mis cambios</Button></div></div></div>}</div>;
+  return <div className="relative h-full w-full"><div role="status" aria-live="polite" className="absolute right-3 top-3 z-40 rounded border border-border bg-background px-2 py-1 text-xs">{{ saved: 'Guardado', saving: 'Guardando…', offline: 'Sin conexión: cambios pendientes', conflict: 'Conflicto de revisión', 'storage-error': 'No se pudo proteger el borrador local' }[status]}</div>{document && <CanvasEditor document={document} onReady={ready} onAddResource={onAddResource} onDropResource={onDropResource} onDropFiles={onDropFiles} onPickFiles={onPickFiles} onCreateRelation={(source, target) => setRelationInitial({ source, target })} />}{activeRelation && <RelationCreateDialog projectId={diagram.projectId} nodes={useCanvasStore.getState().nodes} initial={activeRelation} canSave={status === 'saved'} onCreate={createCanonicalRelation} onVisualAlternative={() => { useCanvasStore.getState().addAnnotation('line'); closeRelation(); }} onClose={closeRelation} />}{conflict && <div role="dialog" aria-modal="true" aria-labelledby="canvas-conflict-title" className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4"><div className="max-w-md rounded-lg border border-border bg-background p-5"><h2 id="canvas-conflict-title" className="font-semibold">El diagrama cambió en otra sesión</h2><p className="mt-2 text-sm">Tus cambios locales siguen protegidos. Carga la versión remota o recupera los tuyos sobre ella.</p><div className="mt-4 flex gap-2"><Button onClick={() => void reloadRemote()}>Cargar versión remota</Button><Button variant="primary" onClick={() => void recoverLocal()}>Recuperar mis cambios</Button></div></div></div>}</div>;
 }
