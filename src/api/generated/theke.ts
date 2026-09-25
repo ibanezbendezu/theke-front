@@ -7,6 +7,7 @@
 import type {
   AccessibilityInput,
   ApiErrorResponse,
+  AvailableRelationListResponse,
   BadRequestResponse,
   CreateRelationInput,
   CreateRelationResponse,
@@ -1784,6 +1785,86 @@ return thekeFetch<createDiagramRelationResponse>(getCreateDiagramRelationUrl(id)
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(createRelationInput)
+  }
+);}
+
+
+
+export type listAvailableDiagramRelationsResponse200 = {
+  data: AvailableRelationListResponse
+  status: 200
+}
+
+export type listAvailableDiagramRelationsResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type listAvailableDiagramRelationsResponseSuccess = (listAvailableDiagramRelationsResponse200) & {
+  headers: Headers;
+};
+export type listAvailableDiagramRelationsResponseError = (listAvailableDiagramRelationsResponse404) & {
+  headers: Headers;
+};
+
+export type listAvailableDiagramRelationsResponse = (listAvailableDiagramRelationsResponseSuccess | listAvailableDiagramRelationsResponseError)
+
+export const getListAvailableDiagramRelationsUrl = (id: string,) => {
+
+
+
+
+  return `/v1/diagrams/${id}/available-relations`
+}
+
+export const listAvailableDiagramRelations = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<listAvailableDiagramRelationsResponse> => {
+
+  return thekeFetch<listAvailableDiagramRelationsResponse>(getListAvailableDiagramRelationsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type restoreRelationResponse201 = {
+  data: RelationDetailResponse
+  status: 201
+}
+
+export type restoreRelationResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type restoreRelationResponseSuccess = (restoreRelationResponse201) & {
+  headers: Headers;
+};
+export type restoreRelationResponseError = (restoreRelationResponse404) & {
+  headers: Headers;
+};
+
+export type restoreRelationResponse = (restoreRelationResponseSuccess | restoreRelationResponseError)
+
+export const getRestoreRelationUrl = (id: string,) => {
+
+
+
+
+  return `/v1/relations/${id}/restore`
+}
+
+export const restoreRelation = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<restoreRelationResponse> => {
+
+  return thekeFetch<restoreRelationResponse>(getRestoreRelationUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
   }
 );}
 

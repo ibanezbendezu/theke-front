@@ -50,11 +50,11 @@ development_status:
   2-10-recorrer-y-editar-el-diagrama-sin-depender-del-espacio-visua: done
   epic-2-retrospective: optional
 
-  epic-3: in-progress
+  epic-3: done
   3-1-crear-una-relación-semántica-entre-recursos: done
   3-2-explicar-y-documentar-una-relación: done
   3-3-explorar-relaciones-en-el-canvas-y-la-vista-semántica: done
-  3-4-reutilizar-y-gestionar-relaciones-existentes: backlog
+  3-4-reutilizar-y-gestionar-relaciones-existentes: done
   epic-3-retrospective: optional
 
   epic-4: backlog

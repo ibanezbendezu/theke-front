@@ -60,6 +60,9 @@ interface CanvasState {
     loadDocument: (nodes: FlowNode[], edges: Edge[], viewport?: { x: number; y: number; zoom: number }, background?: CanvasBackground) => void;
     setViewport: (viewport: { x: number; y: number; zoom: number }) => void;
     updateEdgeData: (edgeId: string, newData: Record<string, unknown>) => void;
+    addRelationEdge: (edge: Edge) => void;
+    setEdgeHidden: (edgeId: string, hidden: boolean) => void;
+    removeEdge: (edgeId: string) => void;
     // Función para manejar el agrupamiento
     setNodeParent: (nodeId: string, parentId: string | undefined, position: {x: number, y: number}) => void;
 }
@@ -168,6 +171,9 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
             )
         }));
     },
+    addRelationEdge: edge => set(state => state.edges.some(item => item.data?.relationId === edge.data?.relationId) ? state : { ...history(state), edges: [...state.edges, edge] }),
+    setEdgeHidden: (edgeId, hidden) => set(state => ({ ...history(state), edges: state.edges.map(edge => edge.id === edgeId ? { ...edge, hidden, selected: false } : edge) })),
+    removeEdge: edgeId => set(state => ({ ...history(state), edges: state.edges.filter(edge => edge.id !== edgeId) })),
 
     setNodeParent: (nodeId, parentId, position) => {
         set((state) => {

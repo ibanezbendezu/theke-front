@@ -13,4 +13,5 @@ export const ImpactEntityType = {
   project: 'project',
   folder: 'folder',
   diagram: 'diagram',
+  relation: 'relation',
 } as const;

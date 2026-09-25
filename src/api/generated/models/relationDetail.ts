@@ -28,6 +28,12 @@ export interface RelationDetail {
   evidence: RelationEvidence[];
   revision: number;
   /** @nullable */
+  archivedAt: string | null;
+  /** @nullable */
+  deletedAt: string | null;
+  /** @nullable */
+  purgeAfter: string | null;
+  /** @nullable */
   createdByUserId: string | null;
   /** @nullable */
   updatedByUserId: string | null;
