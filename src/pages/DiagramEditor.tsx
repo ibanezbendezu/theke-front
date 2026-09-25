@@ -1,4 +1,4 @@
-import { ChevronLeft, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Upload } from 'lucide-react';
+import { ChevronLeft, ListTree, PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Upload } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
@@ -16,6 +16,7 @@ import { CanvasFolderInspector } from '../features/canvas/CanvasFolderInspector'
 import { CanvasGroupInspector } from '../features/canvas/CanvasGroupInspector';
 import { CanvasAnnotationInspector } from '../features/canvas/CanvasAnnotationInspector';
 import { CanvasBackgroundInspector } from '../features/canvas/CanvasPresentationInspector';
+import { CanvasSemanticView } from '../features/canvas/CanvasSemanticView';
 
 export function DiagramEditor() {
   const { diagramId } = useParams();
@@ -23,7 +24,7 @@ export function DiagramEditor() {
 }
 
 function DiagramEditorCore() {
-  const { projectId, diagramId } = useParams(); const navigate = useNavigate(); const diagram = useDiagram(diagramId); const [leftOpen, setLeftOpen] = useState(true); const rightOpen = useCanvasStore(state => state.inspectorOpen); const setRightOpen = useCanvasStore(state => state.setInspectorOpen);
+  const { projectId, diagramId } = useParams(); const navigate = useNavigate(); const diagram = useDiagram(diagramId); const [leftOpen, setLeftOpen] = useState(true); const [semanticOpen, setSemanticOpen] = useState(false); const rightOpen = useCanvasStore(state => state.inspectorOpen); const setRightOpen = useCanvasStore(state => state.setInspectorOpen);
   const [pickerOpen, setPickerOpen] = useState(false); const [preferred, setPreferred] = useState<{ x: number; y: number } | undefined>(); const [duplicate, setDuplicate] = useState<{ resourceId: string; position?: { x: number; y: number } } | null>(null);
   const [readyDiagramId, setReadyDiagramId] = useState<string | null>(null);
   const [uploadPickerOpen, setUploadPickerOpen] = useState(false); const [uploadPosition, setUploadPosition] = useState({ x: 0, y: 0 });
@@ -51,10 +52,12 @@ function DiagramEditorCore() {
     <div className="flex min-h-0 flex-1">
       <nav aria-label="Herramientas del editor" className="flex w-10 shrink-0 flex-col items-center gap-1 border-r border-border bg-surface-variant/80 py-1 supports-[not(backdrop-filter:blur(1px))]:bg-background">
         <Button size="icon" title={leftOpen ? 'Ocultar recursos' : 'Mostrar recursos'} aria-label={leftOpen ? 'Ocultar recursos' : 'Mostrar recursos'} icon={leftOpen ? PanelLeftClose : PanelLeftOpen} onClick={() => setLeftOpen(value => !value)} />
+        <Button size="icon" title={semanticOpen ? 'Ocultar vista semántica' : 'Mostrar vista semántica'} aria-label={semanticOpen ? 'Ocultar vista semántica' : 'Mostrar vista semántica'} aria-pressed={semanticOpen} icon={ListTree} onClick={() => setSemanticOpen(value => !value)} />
         <Button size="icon" title={rightOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'} aria-label={rightOpen ? 'Ocultar propiedades' : 'Mostrar propiedades'} icon={rightOpen ? PanelRightClose : PanelRightOpen} onClick={() => setRightOpen(!rightOpen)} />
         {!diagram.data.archivedAt && <Button size="icon" title="Cargar archivos en el canvas" aria-label="Cargar archivos en el canvas" icon={Upload} onClick={() => pickFiles()} />}
       </nav>
       {leftOpen && (diagram.data.archivedAt ? <aside className="w-56 shrink-0 border-r border-border p-3">Recursos</aside> : readyDiagramId === diagram.data.id ? <CanvasResourcePanel projectId={diagram.data.projectId} onAdd={() => openPicker()} onSelect={id => tryAdd(id)} onSelectFolder={addFolder} /> : <aside className="w-56 shrink-0 border-r border-border p-3 text-xs text-outline">Cargando recursos del canvas…</aside>)}
+      {semanticOpen && readyDiagramId === diagram.data.id && <CanvasSemanticView projectId={diagram.data.projectId} />}
       <section className="min-w-0 flex-1" aria-label="Lienzo">{diagram.data.archivedAt ? <div className="relative h-full"><div className="pointer-events-none h-full"><CanvasEditor document={diagram.data.document} /></div><p role="status" className="absolute right-3 top-3 rounded border border-border bg-background px-3 py-2 text-sm">Diagrama archivado. Restáuralo desde el proyecto para editar.</p></div> : <DiagramWorkspace diagram={diagram.data} refetch={diagram.refetch} onAddResource={openPicker} onDropResource={tryAdd} onDropFiles={uploadAt} onPickFiles={pickFiles} onCanvasReady={canvasReady} />}</section>
       {rightOpen && <aside className="w-[304px] shrink-0 overflow-auto border-l border-border p-3" aria-label="Propiedades">{selectedResource ? <CanvasResourceInspector key={selectedResource.id} nodeId={selectedResource.id} resourceId={selectedResource.data.resourceId as string} caption={typeof selectedResource.data.caption === 'string' ? selectedResource.data.caption : ''} /> : selectedFolder ? <CanvasFolderInspector key={selectedFolder.id} nodeId={selectedFolder.id} projectId={diagram.data.projectId} folderId={selectedFolder.data.folderId as string} caption={typeof selectedFolder.data.caption === 'string' ? selectedFolder.data.caption : ''} onAddResource={id => tryAdd(id)} /> : selectedGroup ? <CanvasGroupInspector groupId={selectedGroup.id} /> : selectedAnnotation ? <CanvasAnnotationInspector nodeId={selectedAnnotation.id} /> : <><CanvasBackgroundInspector/><p className="mt-3 text-xs text-outline">Selecciona un elemento para editarlo.</p></>}</aside>}
     </div>

@@ -178,6 +178,7 @@ function CanvasCore({ viewport, onAddResource, onDropResource, onDropFiles, onPi
                 onMoveEnd={(_, next) => saveViewport(next)}
                 proOptions={{ hideAttribution: true }}
                 fitView={!viewport}
+                onlyRenderVisibleElements
                 className="bg-background"
                 style={{ backgroundColor: background.tone === 'surface' ? 'var(--color-surface)' : 'var(--color-background)' }}
                 minZoom={0.1}
@@ -218,19 +219,21 @@ export function CanvasEditor({ document, onReady, onAddResource, onDropResource,
     const loadDocument = useCanvasStore(state => state.loadDocument);
     useEffect(() => { if (document) { loadDocument(document.nodes, document.edges, document.viewport, document.background); onReady?.(); } }, [document, loadDocument, onReady]);
     const onShortcut = (event: React.KeyboardEvent) => {
-        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || (event.target as HTMLElement).isContentEditable) return;
+        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || (event.target as HTMLElement).isContentEditable) return;
         const store = useCanvasStore.getState(); const key = event.key.toLowerCase(); const modifier = event.ctrlKey || event.metaKey;
+        if (event.target === event.currentTarget && store.nodes.length && ['arrowdown', 'arrowright', 'arrowup', 'arrowleft', 'home', 'end'].includes(key)) { event.preventDefault(); const current = store.nodes.findIndex(node => node.selected); const next = key === 'home' ? 0 : key === 'end' ? store.nodes.length - 1 : (current + (key === 'arrowdown' || key === 'arrowright' ? 1 : -1) + store.nodes.length) % store.nodes.length; store.focusNode(store.nodes[next].id); return; }
+        if (key === 'enter' && event.target === event.currentTarget) { const selected = store.nodes.find(node => node.selected); if (selected) { event.preventDefault(); store.openCanvasNode(selected.id); store.setInspectorOpen(true); } return; }
         if (modifier && key === 'z') { event.preventDefault(); if (event.shiftKey) store.redo(); else store.undo(); return; }
         if (modifier && key === 'y') { event.preventDefault(); store.redo(); return; }
         if (modifier && key === 'd') { const selected = store.nodes.find(node => node.selected && node.type === 'annotation'); if (selected) { event.preventDefault(); store.duplicateNode(selected.id); } return; }
-        if (event.key === 'Delete' || event.key === 'Backspace') { const selected = store.nodes.filter(node => node.selected && node.type === 'annotation'); if (selected.length) { event.preventDefault(); store.removeNodes(selected.map(node => node.id)); } return; }
+        if ((event.key === 'Delete' || event.key === 'Backspace') && onAddResource) { const selected = store.nodes.filter(node => node.selected); if (selected.length) { event.preventDefault(); store.removeNodes(selected.map(node => node.id)); } return; }
         if (modifier || event.altKey) return;
         if (key === 'a' && onAddResource) { event.preventDefault(); onAddResource(); }
         else if (key === 'u' && onPickFiles) { event.preventDefault(); onPickFiles(); }
         else if (onAddResource && ['t', 's', 'l'].includes(key)) { event.preventDefault(); store.addAnnotation(key === 't' ? 'text' : key === 's' ? 'shape' : 'line'); }
     };
     return (
-        <div className="w-full h-full relative" tabIndex={0} onKeyDown={onShortcut}>
+        <div className="w-full h-full relative focus-visible:outline-2 focus-visible:outline-primary" tabIndex={0} role="region" aria-label="Lienzo interactivo. Usa flechas para recorrer elementos, Intro para abrir detalle y Suprimir para quitar la representación." onKeyDown={onShortcut}>
             <ReactFlowProvider>
                 <CanvasCore viewport={document?.viewport} onAddResource={onAddResource} onDropResource={onDropResource} onDropFiles={onDropFiles} onPickFiles={onPickFiles} />
                 <CanvasToolbar onAddResource={onAddResource} />
