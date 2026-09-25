@@ -26,7 +26,7 @@ export function useNote(id?: string) {
 }
 export function useNoteActions() {
   const request = useTokenRequest(); const client = useQueryClient();
-  const refresh = () => { void client.invalidateQueries({ queryKey: ['private', 'notes'] }); void client.invalidateQueries({ queryKey: ['private', 'note'] }); void client.invalidateQueries({ queryKey: ['private', 'resources'] }); void client.invalidateQueries({ queryKey: ['private', 'resource'] }); };
+  const refresh = () => { void client.invalidateQueries({ queryKey: ['private', 'notes'] }); void client.invalidateQueries({ queryKey: ['private', 'note'] }); void client.invalidateQueries({ queryKey: ['private', 'resources'] }); void client.invalidateQueries({ queryKey: ['private', 'resource'] }); void client.invalidateQueries({ queryKey: ['private', 'resource-references'] }); };
   return {
     create: useMutation({ mutationFn: (body: NoteInput) => request<Envelope<Note>>('/v1/notes', { method: 'POST', body: JSON.stringify(body) }).then(value => value.data), onSuccess: refresh }),
     update: useMutation({ mutationFn: ({ id, body }: { id: string; body: NoteInput }) => request<Envelope<Note>>(`/v1/notes/${id}`, { method: 'PATCH', body: JSON.stringify(body) }).then(value => value.data), onSuccess: refresh }),

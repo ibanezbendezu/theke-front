@@ -8,6 +8,14 @@
 export interface RelationEvidence {
   id: string;
   resourceId: string;
+  /** @nullable */
+  resourceVersionId: string | null;
+  /** @nullable */
+  startOffset: number | null;
+  /** @nullable */
+  endOffset: number | null;
+  /** @nullable */
+  pageNumber: number | null;
   title: string;
   /** @nullable */
   excerpt: string | null;

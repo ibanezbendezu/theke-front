@@ -6,10 +6,10 @@ import { useResources } from '../../data/useResources';
 import { useRelation, useUpdateRelation, type RelationDetail, type UpdateRelationInput } from '../../data/useRelations';
 import { CanvasDialog } from './CanvasDialog';
 
-type EvidenceDraft = { resourceId: string; title: string; excerpt: string; note: string };
+type EvidenceDraft = { resourceId: string; title: string; resourceVersionId?: string; startOffset?: number; endOffset?: number; pageNumber: string; excerpt: string; note: string };
 type Draft = Omit<UpdateRelationInput, 'expectedRevision' | 'evidence'> & { evidence: EvidenceDraft[]; expectedRevision: number };
 function fromDetail(detail: RelationDetail): Draft {
-  return { label: detail.label ?? '', explanation: detail.explanation ?? '', provenance: detail.provenance ?? '', evidenceStatus: detail.evidenceStatus, evidence: detail.evidence.map(item => ({ resourceId: item.resourceId, title: item.title, excerpt: item.excerpt ?? '', note: item.note ?? '' })), expectedRevision: detail.revision };
+  return { label: detail.label ?? '', explanation: detail.explanation ?? '', provenance: detail.provenance ?? '', evidenceStatus: detail.evidenceStatus, evidence: detail.evidence.map(item => ({ resourceId: item.resourceId, title: item.title, resourceVersionId: item.resourceVersionId ?? undefined, startOffset: item.startOffset ?? undefined, endOffset: item.endOffset ?? undefined, pageNumber: item.pageNumber?.toString() ?? '', excerpt: item.excerpt ?? '', note: item.note ?? '' })), expectedRevision: detail.revision };
 }
 
 export function RelationEditor({ relationId, onClose }: { relationId: string; onClose: () => void }) {
@@ -32,11 +32,11 @@ function RelationEditorForm({ detail, reload, onClose }: { detail: RelationDetai
   const client = useQueryClient();
   const mutation = useUpdateRelation(detail.id);
   const candidates = resources.data?.pages.flatMap(page => page.data).filter(item => !draft.evidence.some(citation => citation.resourceId === item.id)) ?? [];
-  const changeEvidence = (index: number, field: 'excerpt' | 'note', value: string) => setDraft(current => ({ ...current, evidence: current.evidence.map((item, position) => position === index ? { ...item, [field]: value } : item) }));
+  const changeEvidence = (index: number, field: 'excerpt' | 'note' | 'pageNumber', value: string) => setDraft(current => ({ ...current, evidence: current.evidence.map((item, position) => position === index ? { ...item, [field]: value, ...(field === 'excerpt' ? { startOffset: undefined, endOffset: undefined } : {}) } : item) }));
   const save = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError('');
     try {
-      const saved = await mutation.update({ ...draft, evidence: draft.evidence.map(({ resourceId, excerpt, note }) => ({ resourceId, excerpt, note })) });
+      const saved = await mutation.update({ ...draft, evidence: draft.evidence.map(({ resourceId, resourceVersionId, startOffset, endOffset, pageNumber, excerpt, note }) => ({ resourceId, resourceVersionId, startOffset, endOffset, ...(pageNumber ? { pageNumber: Number(pageNumber) } : {}), excerpt, note })) });
       client.setQueryData(mutation.queryKey, saved);
       onClose();
     } catch (reason) {
@@ -65,10 +65,10 @@ function RelationEditorForm({ detail, reload, onClose }: { detail: RelationDetai
     <section aria-label="Evidencia" className="space-y-3 border-t border-border pt-3">
       <label className="block">Estado de evidencia<select className="mt-1 w-full rounded border border-border bg-background p-2" value={draft.evidenceStatus} onChange={event => setDraft(value => ({ ...value, evidenceStatus: event.target.value as Draft['evidenceStatus'] }))}><option value="none">Sin evidencia citada</option><option value="needs_evidence">Falta evidencia o debe completarse</option><option value="confirmed">Evidencia citada</option></select></label>
       {draft.evidenceStatus === 'needs_evidence' && <p className="rounded border border-amber-500 p-2 text-amber-700" role="status">Esta Relación necesita respaldo adicional.</p>}
-      {draft.evidence.map((item, index) => <fieldset key={`${item.resourceId}-${index}`} className="space-y-2 rounded border border-border p-3"><legend className="font-medium">{item.title}</legend><label className="block">Fragmento<input className="mt-1 w-full rounded border border-border bg-background p-2" maxLength={2_000} value={item.excerpt} onChange={event => changeEvidence(index, 'excerpt', event.target.value)} /></label><label className="block">Nota<textarea className="mt-1 w-full rounded border border-border bg-background p-2" maxLength={2_000} value={item.note} onChange={event => changeEvidence(index, 'note', event.target.value)} /></label><Button type="button" onClick={() => setDraft(value => ({ ...value, evidence: value.evidence.filter((_, position) => position !== index) }))}>Quitar cita</Button></fieldset>)}
+      {draft.evidence.map((item, index) => <fieldset key={`${item.resourceId}-${index}`} className="space-y-2 rounded border border-border p-3"><legend className="font-medium">{item.title}</legend><label className="block">Fragmento<input className="mt-1 w-full rounded border border-border bg-background p-2" maxLength={2_000} value={item.excerpt} onChange={event => changeEvidence(index, 'excerpt', event.target.value)} /></label><p className="text-xs text-outline">En notas, un fragmento único se ubica automáticamente en la versión citada.</p><label className="block">Página del documento<input className="mt-1 w-28 rounded border border-border bg-background p-2" type="number" min={1} value={item.pageNumber} onChange={event => changeEvidence(index, 'pageNumber', event.target.value)} /></label>{item.resourceVersionId && <p className="text-xs text-outline">Versión: {item.resourceVersionId}{item.startOffset != null && item.endOffset != null ? ` · caracteres ${item.startOffset}–${item.endOffset}` : ''}</p>}<label className="block">Nota<textarea className="mt-1 w-full rounded border border-border bg-background p-2" maxLength={2_000} value={item.note} onChange={event => changeEvidence(index, 'note', event.target.value)} /></label><Button type="button" onClick={() => setDraft(value => ({ ...value, evidence: value.evidence.filter((_, position) => position !== index) }))}>Quitar cita</Button></fieldset>)}
       <label className="block">Buscar Recurso en Biblioteca<input className="mt-1 w-full rounded border border-border bg-background p-2" value={search} onChange={event => setSearch(event.target.value)} placeholder="Título o palabra clave" /></label>
       {resources.isError && <p role="alert">No se pudo consultar la Biblioteca.</p>}
-      <ul className="max-h-32 space-y-1 overflow-auto" aria-label="Recursos para citar">{candidates.map(item => <li key={item.id}><Button type="button" disabled={draft.evidence.length >= 10} onClick={() => setDraft(value => ({ ...value, evidenceStatus: value.evidenceStatus === 'none' ? 'confirmed' : value.evidenceStatus, evidence: [...value.evidence, { resourceId: item.id, title: item.title, excerpt: '', note: '' }] }))}>Citar {item.title}</Button></li>)}</ul>
+      <ul className="max-h-32 space-y-1 overflow-auto" aria-label="Recursos para citar">{candidates.map(item => <li key={item.id}><Button type="button" disabled={draft.evidence.length >= 10} onClick={() => setDraft(value => ({ ...value, evidenceStatus: value.evidenceStatus === 'none' ? 'confirmed' : value.evidenceStatus, evidence: [...value.evidence, { resourceId: item.id, title: item.title, excerpt: '', note: '', pageNumber: '' }] }))}>Citar {item.title}</Button></li>)}</ul>
       {resources.hasNextPage && <Button type="button" onClick={() => void resources.fetchNextPage()}>Más Recursos</Button>}
     </section>
     <p className="text-xs text-outline">Última edición: {new Date(detail.updatedAt).toLocaleString()} · revisión {detail.revision}</p>

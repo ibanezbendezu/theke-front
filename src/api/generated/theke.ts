@@ -27,6 +27,7 @@ import type {
   ListDiagramsParams,
   ListNotesParams,
   ListProjectsParams,
+  ListResourcePropertyDefinitions200,
   ListResourcesParams,
   MeResponse,
   NotFoundResponse,
@@ -42,10 +43,13 @@ import type {
   RelationTypeListResponse,
   ResourceAccessResponse,
   ResourceListResponse,
+  ResourceMetadataResponse,
   ResourcePlacementInput,
+  ResourceReferencesResponse,
   ResourceResponse,
   UnauthorizedResponse,
   UpdateRelationInput,
+  UpdateResourceMetadataInput,
   UploadIntent,
   UploadListResponse,
   UploadPolicyResponse,
@@ -2180,6 +2184,144 @@ export const getListResourcesUrl = (params?: ListResourcesParams,) => {
 export const listResources = async (params?: ListResourcesParams, options?: Parameters<typeof thekeFetch>[1]): Promise<listResourcesResponse> => {
 
   return thekeFetch<listResourcesResponse>(getListResourcesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type listResourcePropertyDefinitionsResponse200 = {
+  data: ListResourcePropertyDefinitions200
+  status: 200
+}
+
+export type listResourcePropertyDefinitionsResponseSuccess = (listResourcePropertyDefinitionsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listResourcePropertyDefinitionsResponse = (listResourcePropertyDefinitionsResponseSuccess)
+
+export const getListResourcePropertyDefinitionsUrl = () => {
+
+
+
+
+  return `/v1/resources/property-definitions`
+}
+
+export const listResourcePropertyDefinitions = async ( options?: Parameters<typeof thekeFetch>[1]): Promise<listResourcePropertyDefinitionsResponse> => {
+
+  return thekeFetch<listResourcePropertyDefinitionsResponse>(getListResourcePropertyDefinitionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type updateResourceMetadataResponse200 = {
+  data: ResourceMetadataResponse
+  status: 200
+}
+
+export type updateResourceMetadataResponse400 = {
+  data: BadRequestResponse
+  status: 400
+}
+
+export type updateResourceMetadataResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type updateResourceMetadataResponse409 = {
+  data: ApiErrorResponse
+  status: 409
+}
+
+export type updateResourceMetadataResponseSuccess = (updateResourceMetadataResponse200) & {
+  headers: Headers;
+};
+export type updateResourceMetadataResponseError = (updateResourceMetadataResponse400 | updateResourceMetadataResponse404 | updateResourceMetadataResponse409) & {
+  headers: Headers;
+};
+
+export type updateResourceMetadataResponse = (updateResourceMetadataResponseSuccess | updateResourceMetadataResponseError)
+
+export const getUpdateResourceMetadataUrl = (id: string,) => {
+
+
+
+
+  return `/v1/resources/${id}/metadata`
+}
+
+export const updateResourceMetadata = async (id: string,
+    updateResourceMetadataInput: UpdateResourceMetadataInput, options?: Parameters<typeof thekeFetch>[1]): Promise<updateResourceMetadataResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return thekeFetch<updateResourceMetadataResponse>(getUpdateResourceMetadataUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateResourceMetadataInput)
+  }
+);}
+
+
+
+export type getResourceReferencesResponse200 = {
+  data: ResourceReferencesResponse
+  status: 200
+}
+
+export type getResourceReferencesResponse404 = {
+  data: NotFoundResponse
+  status: 404
+}
+
+export type getResourceReferencesResponseSuccess = (getResourceReferencesResponse200) & {
+  headers: Headers;
+};
+export type getResourceReferencesResponseError = (getResourceReferencesResponse404) & {
+  headers: Headers;
+};
+
+export type getResourceReferencesResponse = (getResourceReferencesResponseSuccess | getResourceReferencesResponseError)
+
+export const getGetResourceReferencesUrl = (id: string,) => {
+
+
+
+
+  return `/v1/resources/${id}/references`
+}
+
+export const getResourceReferences = async (id: string, options?: Parameters<typeof thekeFetch>[1]): Promise<getResourceReferencesResponse> => {
+
+  return thekeFetch<getResourceReferencesResponse>(getGetResourceReferencesUrl(id),
   {
     ...options,
     method: 'GET'

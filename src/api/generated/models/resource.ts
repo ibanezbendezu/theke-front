@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ResourceMetadataStatus } from './resourceMetadataStatus';
+import type { ResourceProperties } from './resourceProperties';
 import type { ResourceStatus } from './resourceStatus';
 import type { ResourceType } from './resourceType';
 
@@ -13,6 +14,11 @@ export interface Resource {
   title: string;
   /** @nullable */
   description?: string | null;
+  aliases: string[];
+  tags: string[];
+  properties: ResourceProperties;
+  /** @nullable */
+  versionId: string | null;
   type: ResourceType;
   /** @nullable */
   mediaType?: string | null;

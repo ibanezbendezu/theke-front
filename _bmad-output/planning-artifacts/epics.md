@@ -1218,6 +1218,41 @@ para reutilizar conocimiento sin imponer la misma composición visual en todos l
 **Then** la API rechaza el impacto obsoleto y devuelve el inventario actualizado
 **And** ninguna visualización queda apuntando silenciosamente a una identidad inexistente.
 
+### Story 3.5: Estructurar metadatos y enlaces de conocimiento
+
+Como autor,
+quiero describir Recursos con propiedades y conectar notas mediante enlaces navegables,
+para explorar el conocimiento y ofrecer contexto verificable a la futura asistencia de IA.
+
+**Requirements:** ampliación solicitada de FR-7, FR-21, FR-22 y preparación de FR-25 a FR-31; NFR-5, NFR-6, NFR-7, NFR-14, NFR-19.
+
+**Acceptance Criteria:**
+
+**Given** un Recurso de cualquier tipo
+**When** el autor edita alias, etiquetas y propiedades
+**Then** Theke valida tipos texto, lista, número, casilla, fecha y fecha y hora y mantiene un tipo consistente por nombre de propiedad en la Cuenta
+**And** permite buscar por alias o contenido de nota y filtrar por etiqueta.
+
+**Given** una nota con enlaces `[[Título]]`, `[[Título#sección|texto]]` o `[[resource:UUID|texto]]`
+**When** se guarda una nueva versión
+**Then** Theke indexa las menciones con posición y versión, resuelve el destino único dentro de la Cuenta y muestra enlaces salientes y referencias entrantes de versiones actuales
+**And** informa enlaces sin resolver o ambiguos sin crear una Relación semántica automáticamente.
+
+**Given** un destino renombrado o un alias que se vuelve ambiguo
+**When** el autor edita la nota
+**Then** los enlaces ya resueltos conservan su identidad mientras el destino siga disponible
+**And** el selector inserta enlaces por identificador estable para nuevas referencias.
+
+**Given** evidencia de una Relación
+**When** el autor cita un Recurso
+**Then** la cita conserva la versión del contenido y, cuando corresponde, el fragmento exacto, su posición o la página
+**And** la API comprueba que la versión y la posición pertenecen al Recurso citado.
+
+**Given** una futura solicitud de análisis de IA
+**When** se construya su alcance
+**Then** estas propiedades, enlaces y citas podrán aportar contexto con identidad y procedencia explícitas
+**And** ninguna mención se tratará por sí sola como afirmación semántica confirmada.
+
 ## Epic 4: Guía de IA bajo control humano
 
 El autor puede recibir sugerencias fundamentadas sobre Relaciones, Grupos y vacíos sin entregar a la IA el control de su conocimiento ni perder el flujo manual.

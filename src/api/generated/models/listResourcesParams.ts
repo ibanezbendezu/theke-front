@@ -12,7 +12,7 @@ type?: ListResourcesType;
 cursor?: string;
 status?: ListResourcesStatus;
 /**
- * Coincidencia parcial por título
+ * Coincidencia parcial por título, alias, descripción o contenido de nota
  * @maxLength 160
  */
 q?: string;
@@ -21,4 +21,8 @@ projectId?: string;
  * Requiere projectId
  */
 folderId?: string;
+/**
+ * @maxLength 80
+ */
+tag?: string;
 };
