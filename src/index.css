@@ -55,3 +55,8 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+.cl-socialButtonsBlockButton,
+.cl-socialButtonsBlockButtonText {
+  color: var(--on-background) !important;
+}

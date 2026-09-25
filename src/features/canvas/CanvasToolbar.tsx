@@ -1,4 +1,5 @@
 import { useReactFlow } from '@xyflow/react';
+import { useMemo } from 'react';
 import { ZoomIn, ZoomOut, Maximize, Plus, Group, Type, Square, Minus, Undo2, Redo2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { useCanvasStore } from '../../store/useCanvasStore';
@@ -6,7 +7,8 @@ import { useCanvasStore } from '../../store/useCanvasStore';
 export function CanvasToolbar({ onAddResource }: { onAddResource?: () => void }) {
     // Este hook nos da acceso directo a los controles de la cámara del canvas
     const { zoomIn, zoomOut, fitView } = useReactFlow();
-    const selectedIds = useCanvasStore(state => state.nodes.filter(node => node.selected && !node.parentId && node.type !== 'container').map(node => node.id));
+    const nodes = useCanvasStore(state => state.nodes);
+    const selectedIds = useMemo(() => nodes.filter(node => node.selected && !node.parentId && node.type !== 'container').map(node => node.id), [nodes]);
     const groupNodes = useCanvasStore(state => state.groupNodes);
     const addAnnotation = useCanvasStore(state => state.addAnnotation);
     const undo = useCanvasStore(state => state.undo); const redo = useCanvasStore(state => state.redo);
